@@ -26,7 +26,7 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	ack, err := c.StreamReadings(ctx, &pb.SensorReading{
+	ack, err := c.Readings(ctx, &pb.SensorReading{
 		Value:       10,
 		SensorType:  "manuel",
 		Id1:         "asldk",

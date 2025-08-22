@@ -154,9 +154,10 @@ const file_common_protobuf_sensor_proto_rawDesc = "" +
 	"\x03id2\x18\x04 \x01(\x05R\x03id2\x12!\n" +
 	"\ftimestamp_ms\x18\x05 \x01(\x03R\vtimestampMs\"#\n" +
 	"\tStreamAck\x12\x16\n" +
-	"\x06status\x18\x01 \x01(\tR\x06status2K\n" +
-	"\rIngestService\x12:\n" +
-	"\x0eStreamReadings\x12\x15.sensor.SensorReading\x1a\x11.sensor.StreamAckB@Z>github.com/Yusufzhafir/worlder-team-assignment/common/protobufb\x06proto3"
+	"\x06status\x18\x01 \x01(\tR\x06status2\x83\x01\n" +
+	"\rIngestService\x12<\n" +
+	"\x0eStreamReadings\x12\x15.sensor.SensorReading\x1a\x11.sensor.StreamAck(\x01\x124\n" +
+	"\bReadings\x12\x15.sensor.SensorReading\x1a\x11.sensor.StreamAckB@Z>github.com/Yusufzhafir/worlder-team-assignment/common/protobufb\x06proto3"
 
 var (
 	file_common_protobuf_sensor_proto_rawDescOnce sync.Once
@@ -177,9 +178,11 @@ var file_common_protobuf_sensor_proto_goTypes = []any{
 }
 var file_common_protobuf_sensor_proto_depIdxs = []int32{
 	0, // 0: sensor.IngestService.StreamReadings:input_type -> sensor.SensorReading
-	1, // 1: sensor.IngestService.StreamReadings:output_type -> sensor.StreamAck
-	1, // [1:2] is the sub-list for method output_type
-	0, // [0:1] is the sub-list for method input_type
+	0, // 1: sensor.IngestService.Readings:input_type -> sensor.SensorReading
+	1, // 2: sensor.IngestService.StreamReadings:output_type -> sensor.StreamAck
+	1, // 3: sensor.IngestService.Readings:output_type -> sensor.StreamAck
+	2, // [2:4] is the sub-list for method output_type
+	0, // [0:2] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name

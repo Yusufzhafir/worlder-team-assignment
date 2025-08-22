@@ -13,5 +13,6 @@ message SensorReading {
 message StreamAck { string status = 1; }
 
 service IngestService {
-  rpc StreamReadings(SensorReading) returns (StreamAck);
+  rpc StreamReadings(stream SensorReading) returns (StreamAck);
+  rpc Readings(SensorReading) returns (StreamAck);
 }

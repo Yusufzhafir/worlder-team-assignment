@@ -20,13 +20,15 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	IngestService_StreamReadings_FullMethodName = "/sensor.IngestService/StreamReadings"
+	IngestService_Readings_FullMethodName       = "/sensor.IngestService/Readings"
 )
 
 // IngestServiceClient is the client API for IngestService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type IngestServiceClient interface {
-	StreamReadings(ctx context.Context, in *SensorReading, opts ...grpc.CallOption) (*StreamAck, error)
+	StreamReadings(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[SensorReading, StreamAck], error)
+	Readings(ctx context.Context, in *SensorReading, opts ...grpc.CallOption) (*StreamAck, error)
 }
 
 type ingestServiceClient struct {
@@ -37,10 +39,23 @@ func NewIngestServiceClient(cc grpc.ClientConnInterface) IngestServiceClient {
 	return &ingestServiceClient{cc}
 }
 
-func (c *ingestServiceClient) StreamReadings(ctx context.Context, in *SensorReading, opts ...grpc.CallOption) (*StreamAck, error) {
+func (c *ingestServiceClient) StreamReadings(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[SensorReading, StreamAck], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &IngestService_ServiceDesc.Streams[0], IngestService_StreamReadings_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[SensorReading, StreamAck]{ClientStream: stream}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type IngestService_StreamReadingsClient = grpc.ClientStreamingClient[SensorReading, StreamAck]
+
+func (c *ingestServiceClient) Readings(ctx context.Context, in *SensorReading, opts ...grpc.CallOption) (*StreamAck, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(StreamAck)
-	err := c.cc.Invoke(ctx, IngestService_StreamReadings_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, IngestService_Readings_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +66,8 @@ func (c *ingestServiceClient) StreamReadings(ctx context.Context, in *SensorRead
 // All implementations must embed UnimplementedIngestServiceServer
 // for forward compatibility.
 type IngestServiceServer interface {
-	StreamReadings(context.Context, *SensorReading) (*StreamAck, error)
+	StreamReadings(grpc.ClientStreamingServer[SensorReading, StreamAck]) error
+	Readings(context.Context, *SensorReading) (*StreamAck, error)
 	mustEmbedUnimplementedIngestServiceServer()
 }
 
@@ -62,8 +78,11 @@ type IngestServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedIngestServiceServer struct{}
 
-func (UnimplementedIngestServiceServer) StreamReadings(context.Context, *SensorReading) (*StreamAck, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method StreamReadings not implemented")
+func (UnimplementedIngestServiceServer) StreamReadings(grpc.ClientStreamingServer[SensorReading, StreamAck]) error {
+	return status.Errorf(codes.Unimplemented, "method StreamReadings not implemented")
+}
+func (UnimplementedIngestServiceServer) Readings(context.Context, *SensorReading) (*StreamAck, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Readings not implemented")
 }
 func (UnimplementedIngestServiceServer) mustEmbedUnimplementedIngestServiceServer() {}
 func (UnimplementedIngestServiceServer) testEmbeddedByValue()                       {}
@@ -86,20 +105,27 @@ func RegisterIngestServiceServer(s grpc.ServiceRegistrar, srv IngestServiceServe
 	s.RegisterService(&IngestService_ServiceDesc, srv)
 }
 
-func _IngestService_StreamReadings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _IngestService_StreamReadings_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(IngestServiceServer).StreamReadings(&grpc.GenericServerStream[SensorReading, StreamAck]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type IngestService_StreamReadingsServer = grpc.ClientStreamingServer[SensorReading, StreamAck]
+
+func _IngestService_Readings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SensorReading)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(IngestServiceServer).StreamReadings(ctx, in)
+		return srv.(IngestServiceServer).Readings(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: IngestService_StreamReadings_FullMethodName,
+		FullMethod: IngestService_Readings_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(IngestServiceServer).StreamReadings(ctx, req.(*SensorReading))
+		return srv.(IngestServiceServer).Readings(ctx, req.(*SensorReading))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -112,10 +138,16 @@ var IngestService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*IngestServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "StreamReadings",
-			Handler:    _IngestService_StreamReadings_Handler,
+			MethodName: "Readings",
+			Handler:    _IngestService_Readings_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "StreamReadings",
+			Handler:       _IngestService_StreamReadings_Handler,
+			ClientStreams: true,
+		},
+	},
 	Metadata: "common/protobuf/sensor.proto",
 }

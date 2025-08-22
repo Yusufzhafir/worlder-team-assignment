@@ -20,7 +20,7 @@ type ServerGRPC struct {
 }
 
 // SayHello implements helloworld.GreeterServer
-func (s *ServerGRPC) StreamReadings(_ context.Context, in *pb.SensorReading) (*pb.StreamAck, error) {
+func (s *ServerGRPC) Readings(_ context.Context, in *pb.SensorReading) (*pb.StreamAck, error) {
 	log.Printf("Received: %v", in.GetId1())
 	return &pb.StreamAck{
 		Status: fmt.Sprintf("successfully received id %v", in),
