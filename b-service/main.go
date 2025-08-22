@@ -7,6 +7,7 @@ import (
 	"net"
 
 	pb "github.com/Yusufzhafir/worlder-team-assignment/common/protobuf"
+	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
 )
 
@@ -27,6 +28,10 @@ func (s *ServerGRPC) StreamReadings(_ context.Context, in *pb.SensorReading) (*p
 }
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
