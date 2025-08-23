@@ -1,0 +1,69 @@
+version: "3.9"
+
+services:
+  db-service:
+    build:
+      context: .
+      dockerfile: ./db-service/Dockerfile
+    container_name: db-service
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-sensors}
+      MYSQL_USER: ${MYSQL_USER:-app}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-app}
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./db-service/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-root}"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    ports:
+      - "3306:3306"
+    restart: unless-stopped
+    networks: [appnet]
+
+  b-service:
+    build:
+      context: .
+      dockerfile: ./b-service/Dockerfile
+    container_name: b-service
+    depends_on:
+      db-service:
+        condition: service_healthy
+    environment:
+      # Example DSN your Go code can read (adjust env var name to your app)
+      DB_DSN: ${DB_DSN:-app:app@tcp(db-service:3306)/sensors?parseTime=true&multiStatements=true&loc=Local}
+      GRPC_ADDR: ${GRPC_ADDR:-0.0.0.0:50051}
+      HTTP_ADDR: ${HTTP_ADDR:-0.0.0.0:8080}
+      JWT_SECRET: ${JWT_SECRET:-dev-secret}
+    ports:
+      - "8080:8080"
+      - "50051:50051"
+    restart: unless-stopped
+    networks: [appnet]
+
+  a-service:
+    build:
+      context: .
+      dockerfile: ./a-service/Dockerfile
+    depends_on:
+      b-service:
+        condition: service_started
+    environment:
+      SERVER_ADDR: ${SERVER_ADDR:-b-service:50051}
+      SENSOR_TYPE: ${SENSOR_TYPE:-TEMP}
+      ID1: ${ID1:-ABCDEF}
+      ID2_RANGE: ${ID2_RANGE:-1-100}
+      RATE_HZ: ${RATE_HZ:-10}
+      AUTH_TOKEN: ${AUTH_TOKEN:-dev-internal-token}
+    restart: unless-stopped
+    networks: [appnet]
+
+volumes:
+  mysql-data:
+
+networks:
+  appnet:
+    driver: bridge
