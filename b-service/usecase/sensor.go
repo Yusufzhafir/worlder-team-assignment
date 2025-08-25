@@ -33,7 +33,7 @@ func (sensorUseCase *SensorUseCaseImpl) InsertSensor(ctx context.Context, data *
 		SensorType:  data.GetSensorType(),
 		ID1:         data.GetId1(),
 		ID2:         int(data.GetId2()),
-		TS:          time.Unix(data.GetTimestampMs(), 0),
+		TS:          time.UnixMilli(data.GetTimestampMs()),
 	})
 
 	if err != nil {

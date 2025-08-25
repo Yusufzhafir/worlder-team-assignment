@@ -69,7 +69,7 @@ func main() {
 				SensorType:  *typ,
 				Id1:         *id1,
 				Id2:         int32(*id2), // adjust type if your proto uses int64
-				TimestampMs: time.Now().Unix(),
+				TimestampMs: time.Now().UnixMilli(),
 			})
 			cancel()
 
