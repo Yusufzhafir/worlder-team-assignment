@@ -22,6 +22,9 @@ type SensorRepository interface {
 type SensorRepositoryImpl struct {
 }
 
+func NewSensorRepository() SensorRepository {
+	return &SensorRepositoryImpl{}
+}
 func (sensorRepo *SensorRepositoryImpl) InsertReadingTx(ctx context.Context, db *sqlx.DB, r *model.SensorReadingInsert) (uint64, error) {
 	tx, err := db.BeginTxx(ctx, &sql.TxOptions{Isolation: sql.LevelReadCommitted})
 	if err != nil {

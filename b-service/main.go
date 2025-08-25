@@ -2,9 +2,12 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
+	"log/slog"
 	"net"
+	"net/http"
 	"os"
 
 	//internal
@@ -17,6 +20,9 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
+
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 var (
@@ -70,11 +76,13 @@ func main() {
 	}
 
 	//initiate stuff
-	repoObj := &sensorRepository.SensorRepositoryImpl{}
-	useCaseObj := &sensorUsecase.SensorUseCaseImpl{
-		Db:   db,
-		Repo: repoObj,
-	}
+	repoObj := sensorRepository.NewSensorRepository()
+	useCaseObj := sensorUsecase.NewSensorUseCase(
+		db,
+		&repoObj,
+	)
+
+	//grpc server
 	s := grpc.NewServer()
 	myServer := &ServerGRPC{
 		sensorUsecase: useCaseObj,
@@ -83,7 +91,17 @@ func main() {
 	pb.RegisterIngestServiceServer(s, myServer)
 	logger.Printf("server listening at %v", lis.Addr())
 
+	e := echo.New()
+
+	// Middleware
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
+
 	if err := s.Serve(lis); err != nil {
 		logger.Fatalf("failed to serve: %v", err)
+	}
+
+	if err := e.Start(":8080"); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		slog.Error("failed to start server", "error", err)
 	}
 }

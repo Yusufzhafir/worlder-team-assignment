@@ -16,12 +16,18 @@ type SensorUseCase interface {
 }
 
 type SensorUseCaseImpl struct {
-	Db   *sqlx.DB
-	Repo repository.SensorRepository
+	db   *sqlx.DB
+	repo *repository.SensorRepository
 }
 
 func (sensorUseCase *SensorUseCaseImpl) InsertSensor(ctx context.Context, data *pb.SensorReading) error {
-	id, err := sensorUseCase.Repo.InsertReadingTx(ctx, sensorUseCase.Db, &model.SensorReadingInsert{
+	repo := *sensorUseCase.repo
+
+	if repo == nil {
+		return fmt.Errorf("repository object is nil %v", repo)
+	}
+
+	id, err := repo.InsertReadingTx(ctx, sensorUseCase.db, &model.SensorReadingInsert{
 		SensorValue: data.GetValue(),
 		SensorType:  data.GetSensorType(),
 		ID1:         data.GetId1(),
@@ -32,8 +38,20 @@ func (sensorUseCase *SensorUseCaseImpl) InsertSensor(ctx context.Context, data *
 	if err != nil {
 		return err
 	}
+
 	if id == 0 {
 		return fmt.Errorf("failed to insert because id returned with %d", id)
 	}
+
 	return nil
+}
+
+func NewSensorUseCase(
+	db *sqlx.DB,
+	repo *repository.SensorRepository,
+) SensorUseCase {
+	return &SensorUseCaseImpl{
+		db:   db,
+		repo: repo,
+	}
 }
