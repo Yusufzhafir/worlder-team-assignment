@@ -3,8 +3,8 @@ version: "3.9"
 services:
   db-service:
     build:
-      context: .
-      dockerfile: ./db-service/Dockerfile
+      context: ./db-service   # <-- change this
+      dockerfile: Dockerfile  # <-- now relative to ./db-service
     container_name: db-service
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
