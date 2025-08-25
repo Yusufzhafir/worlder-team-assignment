@@ -7,6 +7,7 @@ import (
 	"net"
 
 	pb "github.com/Yusufzhafir/worlder-team-assignment/common/protobuf"
+	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
 )
@@ -17,6 +18,7 @@ var (
 
 type ServerGRPC struct {
 	pb.UnimplementedIngestServiceServer
+	db *sqlx.DB
 }
 
 // SayHello implements helloworld.GreeterServer
@@ -36,9 +38,21 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
+
+	db, err := sqlx.Connect("postgres", "user=foo dbname=bar sslmode=disable")
+
+	if err != nil {
+		log.Fatalf("Failed to connect DB %v", err)
+		return
+	}
+
 	s := grpc.NewServer()
-	pb.RegisterIngestServiceServer(s, &ServerGRPC{})
+	myServer := &ServerGRPC{
+		db: db,
+	}
+	pb.RegisterIngestServiceServer(s, myServer)
 	log.Printf("server listening at %v", lis.Addr())
+
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
