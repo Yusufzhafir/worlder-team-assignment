@@ -3,11 +3,11 @@ package model
 // Domain models
 // swagger:model SensorPayload
 type SensorPayload struct {
-	ID          string   `json:"id"          example:"abc-123"`
-	SensorType  string   `json:"sensorType"  example:"temperature"`
-	Value       float64  `json:"value"       example:"23.5"`
-	TimestampMs int64    `json:"timestampMs" example:"1724550000000"`
-	Tags        []string `json:"tags,omitempty"`
+	ID1         string  `json:"id1"          example:"abc-123"`
+	ID2         int     `json:"id2"          example:"123"`
+	SensorType  string  `json:"sensorType"  example:"temperature"`
+	Value       float64 `json:"value"       example:"23.5"`
+	TimestampMs int64   `json:"timestampMs" example:"1724550000000"`
 }
 
 // swagger:model SensorPage

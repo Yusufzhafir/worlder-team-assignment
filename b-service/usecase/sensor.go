@@ -13,6 +13,7 @@ import (
 
 type SensorUseCase interface {
 	InsertSensor(ctx context.Context, data *pb.SensorReading) error
+	GetSensorByTime(ctx context.Context, from time.Time, to time.Time, limit int, offset int) ([]model.SensorReading, error)
 }
 
 type SensorUseCaseImpl struct {
@@ -44,6 +45,22 @@ func (sensorUseCase *SensorUseCaseImpl) InsertSensor(ctx context.Context, data *
 	}
 
 	return nil
+}
+
+func (sensorUseCase *SensorUseCaseImpl) GetSensorByTime(ctx context.Context, from time.Time, to time.Time, limit int, offset int) ([]model.SensorReading, error) {
+	repo := *sensorUseCase.repo
+
+	if repo == nil {
+		return []model.SensorReading{}, fmt.Errorf("repository object is nil %v", repo)
+	}
+
+	result, err := repo.SelectByTime(ctx, sensorUseCase.db, from, to, limit, offset)
+
+	if err != nil {
+		return []model.SensorReading{}, err
+	}
+
+	return result, nil
 }
 
 func NewSensorUseCase(

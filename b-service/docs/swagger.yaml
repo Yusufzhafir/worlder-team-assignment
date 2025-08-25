@@ -30,16 +30,15 @@ definitions:
     type: object
   model.SensorPayload:
     properties:
-      id:
+      id1:
         example: abc-123
         type: string
+      id2:
+        example: 123
+        type: integer
       sensorType:
         example: temperature
         type: string
-      tags:
-        items:
-          type: string
-        type: array
       timestampMs:
         example: 1724550000000
         type: integer
@@ -110,6 +109,67 @@ paths:
                   $ref: '#/definitions/model.Empty'
               type: object
       summary: List sensor readings (paginated)
+      tags:
+      - sensor
+  /sensor/time:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        minimum: 1
+        name: page
+        type: integer
+      - default: 50
+        description: Page size
+        in: query
+        maximum: 500
+        minimum: 1
+        name: page_size
+        type: integer
+      - default: "2006-01-02T15:04:05.999999999+07:00"
+        description: from time
+        in: query
+        name: from
+        type: string
+      - default: "2006-01-02T15:04:05.999999999+07:00"
+        description: to time
+        in: query
+        name: to
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'data: SensorPage'
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.SensorPage'
+              type: object
+        "400":
+          description: error=true, message explains
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.Empty'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.Empty'
+              type: object
+      summary: List sensor readings filter by time(paginated)
       tags:
       - sensor
 securityDefinitions:

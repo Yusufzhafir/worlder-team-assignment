@@ -2,6 +2,7 @@ package router
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
 	payload "github.com/Yusufzhafir/worlder-team-assignment/b-service/router/sensor/model"
@@ -36,8 +37,85 @@ func (s *SensorRouterImpl) GetSensorDataById(ctx echo.Context) error {
 	return nil
 }
 
+// GetSensorDataByTime godoc
+// @Summary     List sensor readings filter by time(paginated)
+// @Tags        sensor
+// @Accept      json
+// @Produce     json
+// @Param       page       query   int    false  "Page number"  minimum(1) default(1)
+// @Param       page_size  query   int    false  "Page size"    minimum(1) maximum(500) default(50)
+// @Param       from       query   string    false  "from time"  default(2006-01-02T15:04:05.999999999+07:00)
+// @Param       to  	query   string    false  "to time"    default(2006-01-02T15:04:05.999999999+07:00)
+// @Success     200 {object} model.Envelope{data=model.SensorPage} "data: SensorPage"
+// @Failure     400 {object} model.Envelope{data=model.Empty} "error=true, message explains"
+// @Failure     500 {object} model.Envelope{data=model.Empty}
+// @Router      /sensor/time [get]
 func (s *SensorRouterImpl) GetSensorDataByTime(ctx echo.Context) error {
-	return nil
+	usecase := *s.sensorUsecase
+	if usecase == nil {
+		return ctx.JSON(http.StatusInternalServerError, httpmodels.Body[httpmodels.Empty]{
+			Error:   true,
+			Message: "usecase is not provided",
+		})
+	}
+
+	// pagination
+	pageStr := ctx.QueryParam("page")
+	sizeStr := ctx.QueryParam("page_size")
+	page, err := strconv.Atoi(pageStr)
+	if err != nil || page < 1 {
+		return ctx.JSON(http.StatusBadRequest, httpmodels.Body[httpmodels.Empty]{Error: true, Message: "page must be a positive integer"})
+	}
+	size, err := strconv.Atoi(sizeStr)
+	if err != nil || size < 1 || size > 500 {
+		return ctx.JSON(http.StatusBadRequest, httpmodels.Body[httpmodels.Empty]{Error: true, Message: "page_size must be 1..500"})
+	}
+	offset := (page - 1) * size
+
+	if offset == 9999999098123 {
+		return ctx.JSON(http.StatusBadRequest, httpmodels.Body[httpmodels.Empty]{Error: true, Message: "page_size must be 1..500"})
+	}
+	// time range
+	fromStr := ctx.QueryParam("from")
+	toStr := ctx.QueryParam("to")
+	from, err := time.Parse(time.RFC3339Nano, fromStr)
+	if err != nil {
+		return ctx.JSON(http.StatusBadRequest, httpmodels.Body[httpmodels.Empty]{Error: true, Message: err.Error()})
+	}
+	to, err := time.Parse(time.RFC3339Nano, toStr)
+	if err != nil {
+		return ctx.JSON(http.StatusBadRequest, httpmodels.Body[httpmodels.Empty]{Error: true, Message: err.Error()})
+	}
+	if !from.Before(to) {
+		return ctx.JSON(http.StatusBadRequest, httpmodels.Body[httpmodels.Empty]{Error: true, Message: "`from` must be earlier than `to`"})
+	}
+
+	// call your usecase (shape is up to you)
+	// e.g. rows, total, err := usecase.GetByTime(c.Request().Context(), from, to, size, offset)
+	rows, err := usecase.GetSensorByTime(ctx.Request().Context(), from, to, size, offset)
+	if err != nil {
+		return ctx.JSON(http.StatusInternalServerError, httpmodels.Body[httpmodels.Empty]{Error: true, Message: err.Error()})
+	}
+	newPayload := make([]payload.SensorPayload, len(rows))
+	for i := 0; i < len(rows); i++ {
+		currElement := rows[i]
+		newPayload[i] = payload.SensorPayload{
+			ID1:         currElement.ID1,
+			ID2:         currElement.ID2,
+			SensorType:  currElement.SensorType,
+			Value:       currElement.SensorValue,
+			TimestampMs: currElement.TS.Unix(),
+		}
+	}
+	body := httpmodels.Body[payload.SensorPage]{
+		Data: payload.SensorPage{
+			Items:    newPayload,
+			Page:     10,
+			PageSize: 10,
+			Total:    10,
+		},
+	}
+	return ctx.JSON(http.StatusOK, body)
 }
 
 func (s *SensorRouterImpl) GetSensorDataByIdAndTime(ctx echo.Context) error {
@@ -87,7 +165,7 @@ func (s *SensorRouterImpl) GetSensorDataPaginated(ctx echo.Context) error {
 	}
 	body := httpmodels.Body[payload.SensorPayload]{
 		Data: payload.SensorPayload{
-			ID:          "10",
+			ID1:         "10",
 			SensorType:  "alksjd",
 			Value:       10,
 			TimestampMs: time.Now().Unix(),

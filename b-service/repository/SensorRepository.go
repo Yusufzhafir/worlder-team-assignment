@@ -3,20 +3,17 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"time"
 
 	model "github.com/Yusufzhafir/worlder-team-assignment/b-service/repository/model"
 
 	"github.com/jmoiron/sqlx"
 )
 
-const insertReadingSQL = `
-INSERT INTO sensor_readings (sensor_value, sensor_type, id1, id2, ts)
-VALUES (:sensor_value, :sensor_type, :id1, :id2, :ts)
-`
-
 type SensorRepository interface {
 	InsertReadingTx(ctx context.Context, db *sqlx.DB, r *model.SensorReadingInsert) (uint64, error)
 	InsertReadingsBatchTx(ctx context.Context, db *sqlx.DB, rs []model.SensorReadingInsert) (int64, error)
+	SelectByTime(ctx context.Context, db *sqlx.DB, startTime, stopTime time.Time, limit int, offset int) ([]model.SensorReading, error)
 }
 
 type SensorRepositoryImpl struct {
@@ -25,6 +22,12 @@ type SensorRepositoryImpl struct {
 func NewSensorRepository() SensorRepository {
 	return &SensorRepositoryImpl{}
 }
+
+const insertReadingSQL = `
+INSERT INTO sensor_readings (sensor_value, sensor_type, id1, id2, ts)
+VALUES (:sensor_value, :sensor_type, :id1, :id2, :ts)
+`
+
 func (sensorRepo *SensorRepositoryImpl) InsertReadingTx(ctx context.Context, db *sqlx.DB, r *model.SensorReadingInsert) (uint64, error) {
 	tx, err := db.BeginTxx(ctx, &sql.TxOptions{Isolation: sql.LevelReadCommitted})
 	if err != nil {
@@ -90,4 +93,59 @@ func (sensorRepo *SensorRepositoryImpl) InsertReadingsBatchTx(ctx context.Contex
 		return affected, err
 	}
 	return affected, nil
+}
+
+const selectSensorsDataByTimePaginated = `
+SELECT sensor_value, sensor_type, id1, id2, ts
+FROM sensor_readings
+WHERE ts >= :ts_start AND ts < :ts_stop
+ORDER BY ts
+LIMIT :limit OFFSET :offset
+`
+
+type SelectByTimePageArgs struct {
+	TsStart time.Time `db:"ts_start"`
+	TsStop  time.Time `db:"ts_stop"`
+	Limit   int       `db:"limit"`
+	Offset  int       `db:"offset"`
+}
+
+func (repo *SensorRepositoryImpl) SelectByTime(
+	ctx context.Context,
+	db *sqlx.DB,
+	startTime, stopTime time.Time,
+	limit, offset int,
+) ([]model.SensorReading, error) {
+	if limit <= 0 {
+		limit = 100
+	}
+	if offset < 0 {
+		offset = 0
+	}
+
+	args := SelectByTimePageArgs{
+		TsStart: startTime,
+		TsStop:  stopTime,
+		Limit:   limit,
+		Offset:  offset,
+	}
+
+	rows, err := db.NamedQuery(selectSensorsDataByTimePaginated, args)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var readings []model.SensorReading
+	for rows.Next() {
+		var r model.SensorReading
+		if err := rows.StructScan(&r); err != nil {
+			return nil, err
+		}
+		readings = append(readings, r)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return readings, nil
 }

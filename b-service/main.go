@@ -102,7 +102,7 @@ func main() {
 		logger.Fatalf("failed to listen: %v", err)
 	}
 
-	db, err := sqlx.Connect("mysql", fmt.Sprintf("%s:%s@(localhost:3306)/%s", dbUser, dbPassword, dbName))
+	db, err := sqlx.Connect("mysql", fmt.Sprintf("%s:%s@tcp(localhost:3306)/%s?parseTime=true&loc=Local", dbUser, dbPassword, dbName))
 
 	if err != nil {
 		logger.Fatalf("Failed to connect DB %v", err)
@@ -123,7 +123,6 @@ func main() {
 		Logger:        logger,
 	})
 	pb.RegisterIngestServiceServer(grpcSrv, &myServer)
-	logger.Printf("gRPC server listening at %v", grpcLis.Addr())
 
 	//http server
 	e := echo.New()
