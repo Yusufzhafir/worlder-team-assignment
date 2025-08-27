@@ -172,6 +172,79 @@ paths:
       summary: List sensor readings filtered by ID combinations (paginated)
       tags:
       - sensor
+  /sensor/ids-time:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        minimum: 1
+        name: page
+        type: integer
+      - default: 50
+        description: Page size
+        in: query
+        maximum: 500
+        minimum: 1
+        name: page_size
+        type: integer
+      - description: Comma-separated ID1 values
+        example: 0,1,2
+        in: query
+        name: id1
+        type: string
+      - description: Comma-separated ID2 values
+        example: A,B,C
+        in: query
+        name: id2
+        type: string
+      - description: Start time (RFC3339)
+        example: "2023-01-01T00:00:00Z"
+        in: query
+        name: from_time
+        required: true
+        type: string
+      - description: End time (RFC3339)
+        example: "2023-12-31T23:59:59Z"
+        in: query
+        name: to_time
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'data: SensorPage'
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.SensorPage'
+              type: object
+        "400":
+          description: error=true, message explains
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.Empty'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.Empty'
+              type: object
+      summary: List sensor readings filtered by ID combinations and time range (paginated)
+      tags:
+      - sensor
   /sensor/time:
     get:
       consumes:

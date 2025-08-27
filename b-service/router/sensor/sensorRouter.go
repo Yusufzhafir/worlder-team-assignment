@@ -15,15 +15,15 @@ import (
 )
 
 type SensorRouter interface {
-	GetSensorDataById(ctx echo.Context) error
+	GetSensorDataByIds(ctx echo.Context) error
 	GetSensorDataByTime(ctx echo.Context) error
-	GetSensorDataByIdAndTime(ctx echo.Context) error
-	DeleteSensorById(ctx echo.Context) error
+	GetSensorDataByIdsAndTime(ctx echo.Context) error
+	DeleteSensorByIds(ctx echo.Context) error
 	DeleteSensorByTime(ctx echo.Context) error
-	DeleteSensorByIdAndTime(ctx echo.Context) error
-	UpdateSensorById(ctx echo.Context) error
+	DeleteSensorByIdsAndTime(ctx echo.Context) error
+	UpdateSensorByIds(ctx echo.Context) error
 	UpdateSensorByTime(ctx echo.Context) error
-	UpdateSensorByIdAndTime(ctx echo.Context) error
+	UpdateSensorByIdsAndTime(ctx echo.Context) error
 	GetSensorDataPaginated(ctx echo.Context) error
 }
 
@@ -37,6 +37,31 @@ func NewSensorRouter(sensorUsecase *usecase.SensorUseCase) SensorRouter {
 	}
 }
 
+// parseTimeRange parses time range from query parameters
+func parseTimeRange(ctx echo.Context) (time.Time, time.Time, error) {
+	fromStr := ctx.QueryParam("from_time")
+	toStr := ctx.QueryParam("to_time")
+
+	if fromStr == "" || toStr == "" {
+		return time.Time{}, time.Time{}, fmt.Errorf("both from_time and to_time must be provided")
+	}
+
+	fromTime, err := time.Parse(time.RFC3339, fromStr)
+	if err != nil {
+		return time.Time{}, time.Time{}, fmt.Errorf("invalid from_time format: %v (use RFC3339 format like 2023-01-01T00:00:00Z)", err)
+	}
+
+	toTime, err := time.Parse(time.RFC3339, toStr)
+	if err != nil {
+		return time.Time{}, time.Time{}, fmt.Errorf("invalid to_time format: %v (use RFC3339 format like 2023-01-01T00:00:00Z)", err)
+	}
+
+	if !fromTime.Before(toTime) {
+		return time.Time{}, time.Time{}, fmt.Errorf("from_time must be before to_time")
+	}
+
+	return fromTime, toTime, nil
+}
 func validatePagination(ctx echo.Context) (int, int, int, error) {
 	pageStr := ctx.QueryParam("page")
 	sizeStr := ctx.QueryParam("page_size")
@@ -52,7 +77,7 @@ func validatePagination(ctx echo.Context) (int, int, int, error) {
 	return page, size, offset, nil
 }
 
-// GetSensorDataByIds godoc
+// GetSensorDataByIdss godoc
 // @Summary     List sensor readings filtered by ID combinations (paginated)
 // @Tags        sensor
 // @Accept      json
@@ -65,7 +90,7 @@ func validatePagination(ctx echo.Context) (int, int, int, error) {
 // @Failure     400 {object} model.Envelope{data=model.Empty} "error=true, message explains"
 // @Failure     500 {object} model.Envelope{data=model.Empty}
 // @Router      /sensor/ids [get]
-func (s *SensorRouterImpl) GetSensorDataById(ctx echo.Context) error {
+func (s *SensorRouterImpl) GetSensorDataByIds(ctx echo.Context) error {
 	usecase := *s.sensorUsecase
 	if usecase == nil {
 		return ctx.JSON(http.StatusInternalServerError, httpmodels.Body[httpmodels.Empty]{
@@ -97,7 +122,7 @@ func (s *SensorRouterImpl) GetSensorDataById(ctx echo.Context) error {
 	}
 
 	// call usecase
-	result, err := usecase.GetSensorByID(ctx.Request().Context(), &idCombinations, size, offset)
+	result, err := usecase.GetSensorByIDs(ctx.Request().Context(), &idCombinations, size, offset)
 	if err != nil {
 		return ctx.JSON(http.StatusInternalServerError, httpmodels.Body[httpmodels.Empty]{
 			Error:   true,
@@ -182,7 +207,7 @@ func parseIDCombinations(ctx echo.Context) ([]repository.IDCombination, error) {
 // @Param       page       query   int    false  "Page number"  minimum(1) default(1)
 // @Param       page_size  query   int    false  "Page size"    minimum(1) maximum(500) default(50)
 // @Param       from       query   string    false  "from time"  default(2006-01-02T15:04:05.999999999+07:00)
-// @Param       to  	query   string    false  "to time"    default(2006-01-02T15:04:05.999999999+07:00)
+// @Param       to  	query   string    false  "to time"    default(2006-01-02T16:04:05.999999999+07:00)
 // @Success     200 {object} model.Envelope{data=model.SensorPage} "data: SensorPage"
 // @Failure     400 {object} model.Envelope{data=model.Empty} "error=true, message explains"
 // @Failure     500 {object} model.Envelope{data=model.Empty}
@@ -203,22 +228,16 @@ func (s *SensorRouterImpl) GetSensorDataByTime(ctx echo.Context) error {
 	}
 
 	// time range
-	fromStr := ctx.QueryParam("from")
-	toStr := ctx.QueryParam("to")
-	from, err := time.Parse(time.RFC3339Nano, fromStr)
+	fromTime, toTime, err := parseTimeRange(ctx)
 	if err != nil {
-		return ctx.JSON(http.StatusBadRequest, httpmodels.Body[httpmodels.Empty]{Error: true, Message: err.Error()})
-	}
-	to, err := time.Parse(time.RFC3339Nano, toStr)
-	if err != nil {
-		return ctx.JSON(http.StatusBadRequest, httpmodels.Body[httpmodels.Empty]{Error: true, Message: err.Error()})
-	}
-	if !from.Before(to) {
-		return ctx.JSON(http.StatusBadRequest, httpmodels.Body[httpmodels.Empty]{Error: true, Message: "`from` must be earlier than `to`"})
+		return ctx.JSON(http.StatusBadRequest, httpmodels.Body[httpmodels.Empty]{
+			Error:   true,
+			Message: fmt.Sprintf("Invalid time parameters: %v", err),
+		})
 	}
 
 	// call usecase
-	result, err := usecase.GetSensorByTime(ctx.Request().Context(), from, to, size, offset)
+	result, err := usecase.GetSensorByTime(ctx.Request().Context(), fromTime, toTime, size, offset)
 	if err != nil {
 		return ctx.JSON(http.StatusInternalServerError, httpmodels.Body[httpmodels.Empty]{Error: true, Message: err.Error()})
 	}
@@ -244,11 +263,94 @@ func (s *SensorRouterImpl) GetSensorDataByTime(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, body)
 }
 
-func (s *SensorRouterImpl) GetSensorDataByIdAndTime(ctx echo.Context) error {
-	return nil
+// GetSensorDataByIdssAndTime godoc
+// @Summary     List sensor readings filtered by ID combinations and time range (paginated)
+// @Tags        sensor
+// @Accept      json
+// @Produce     json
+// @Param       page       query   int    false  "Page number"              minimum(1) default(1)
+// @Param       page_size  query   int    false  "Page size"                minimum(1) maximum(500) default(50)
+// @Param       id1        query   string false  "Comma-separated ID1 values" example(0,1,2)
+// @Param       id2        query   string false  "Comma-separated ID2 values" example(A,B,C)
+// @Param       from_time  query   string true   "Start time (RFC3339Nano)"     example(2025-08-25T18:00:24.947000+07:00)
+// @Param       to_time    query   string true   "End time (RFC3339Nano)"       example(2025-08-25T19:00:24.947000+07:00)
+// @Success     200 {object} model.Envelope{data=model.SensorPage} "data: SensorPage"
+// @Failure     400 {object} model.Envelope{data=model.Empty} "error=true, message explains"
+// @Failure     500 {object} model.Envelope{data=model.Empty}
+// @Router      /sensor/ids-time [get]
+func (s *SensorRouterImpl) GetSensorDataByIdsAndTime(ctx echo.Context) error {
+	usecase := *s.sensorUsecase
+	if usecase == nil {
+		return ctx.JSON(http.StatusInternalServerError, httpmodels.Body[httpmodels.Empty]{
+			Error:   true,
+			Message: "usecase is not provided",
+		})
+	}
+
+	// pagination
+	page, size, offset, err := validatePagination(ctx)
+	if err != nil {
+		return err
+	}
+
+	// Parse ID combinations
+	idCombinations, err := parseIDCombinations(ctx)
+	if err != nil {
+		return ctx.JSON(http.StatusBadRequest, httpmodels.Body[httpmodels.Empty]{
+			Error:   true,
+			Message: fmt.Sprintf("Invalid ID parameters: %v", err),
+		})
+	}
+
+	if len(idCombinations) == 0 {
+		return ctx.JSON(http.StatusBadRequest, httpmodels.Body[httpmodels.Empty]{
+			Error:   true,
+			Message: "At least one ID combination must be provided",
+		})
+	}
+
+	// Parse time range
+	fromTime, toTime, err := parseTimeRange(ctx)
+	if err != nil {
+		return ctx.JSON(http.StatusBadRequest, httpmodels.Body[httpmodels.Empty]{
+			Error:   true,
+			Message: fmt.Sprintf("Invalid time parameters: %v", err),
+		})
+	}
+
+	// call usecase
+	result, err := usecase.GetSensorByIDsAndTime(ctx.Request().Context(), &idCombinations, fromTime, toTime, size, offset)
+	if err != nil {
+		return ctx.JSON(http.StatusInternalServerError, httpmodels.Body[httpmodels.Empty]{
+			Error:   true,
+			Message: err.Error(),
+		})
+	}
+
+	newPayload := make([]payload.SensorPayload, len(result.Data))
+	for i := 0; i < len(result.Data); i++ {
+		currElement := result.Data[i]
+		newPayload[i] = payload.SensorPayload{
+			ID1:         currElement.ID1,
+			ID2:         currElement.ID2,
+			SensorType:  currElement.SensorType,
+			Value:       currElement.SensorValue,
+			TimestampMs: currElement.TS.Unix(),
+		}
+	}
+
+	body := httpmodels.Body[payload.SensorPage]{
+		Data: payload.SensorPage{
+			Items:    newPayload,
+			Page:     page,
+			PageSize: size,
+			Total:    result.Count,
+		},
+	}
+	return ctx.JSON(http.StatusOK, body)
 }
 
-func (s *SensorRouterImpl) DeleteSensorById(ctx echo.Context) error {
+func (s *SensorRouterImpl) DeleteSensorByIds(ctx echo.Context) error {
 	return nil
 }
 
@@ -256,11 +358,11 @@ func (s *SensorRouterImpl) DeleteSensorByTime(ctx echo.Context) error {
 	return nil
 }
 
-func (s *SensorRouterImpl) DeleteSensorByIdAndTime(ctx echo.Context) error {
+func (s *SensorRouterImpl) DeleteSensorByIdsAndTime(ctx echo.Context) error {
 	return nil
 }
 
-func (s *SensorRouterImpl) UpdateSensorById(ctx echo.Context) error {
+func (s *SensorRouterImpl) UpdateSensorByIds(ctx echo.Context) error {
 	return nil
 }
 
@@ -268,7 +370,7 @@ func (s *SensorRouterImpl) UpdateSensorByTime(ctx echo.Context) error {
 	return nil
 }
 
-func (s *SensorRouterImpl) UpdateSensorByIdAndTime(ctx echo.Context) error {
+func (s *SensorRouterImpl) UpdateSensorByIdsAndTime(ctx echo.Context) error {
 	return nil
 }
 
