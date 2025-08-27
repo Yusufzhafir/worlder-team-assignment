@@ -57,3 +57,33 @@ type DeleteByIDAndTimesRequest struct {
 	FromTime       time.Time       `json:"from_time" validate:"required" example:"2025-08-25T18:00:24.947000+07:00"`
 	ToTime         time.Time       `json:"to_time" validate:"required" example:"2025-08-25T19:00:24.947000+07:00"`
 }
+
+// swagger:model UpdateByIDsRequest
+type UpdateByIDsRequest struct {
+	IDCombinations []IDCombination `json:"id_combinations" validate:"required,min=1"`
+	SensorValue    float64         `json:"sensor_value" validate:"required" example:"25.5"`
+	SensorType     string          `json:"sensor_type" validate:"required" example:"temperature"`
+}
+
+// swagger:model UpdateByTimeRequest
+type UpdateByTimeRequest struct {
+	FromTime    time.Time `json:"from_time" validate:"required" example:"2023-01-01T00:00:00Z"`
+	ToTime      time.Time `json:"to_time" validate:"required" example:"2023-12-31T23:59:59Z"`
+	SensorValue float64   `json:"sensor_value" validate:"required" example:"25.5"`
+	SensorType  string    `json:"sensor_type" validate:"required" example:"temperature"`
+}
+
+// swagger:model UpdateByIDsAndTimeRequest
+type UpdateByIDsAndTimeRequest struct {
+	IDCombinations []IDCombination `json:"id_combinations" validate:"required,min=1"`
+	FromTime       time.Time       `json:"from_time" validate:"required" example:"2023-01-01T00:00:00Z"`
+	ToTime         time.Time       `json:"to_time" validate:"required" example:"2023-12-31T23:59:59Z"`
+	SensorValue    float64         `json:"sensor_value" validate:"required" example:"25.5"`
+	SensorType     string          `json:"sensor_type" validate:"required" example:"temperature"`
+}
+
+// swagger:model UpdateResponse
+type UpdateResponse struct {
+	UpdatedCount int64  `json:"updated_count"`
+	Message      string `json:"message"`
+}

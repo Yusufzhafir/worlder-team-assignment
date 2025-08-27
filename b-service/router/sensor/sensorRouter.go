@@ -2,7 +2,6 @@ package router
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -60,8 +59,6 @@ func parseTimeRange(ctx echo.Context) (time.Time, time.Time, error) {
 	if !fromTime.Before(toTime) {
 		return time.Time{}, time.Time{}, fmt.Errorf("from_time must be before to_time")
 	}
-
-	log.Default().Printf("this is converted millis converted %f, %f", fromTime.UnixMilli(), toTime.UnixMilli())
 
 	return fromTime, toTime, nil
 }
@@ -548,16 +545,230 @@ func (s *SensorRouterImpl) DeleteSensorByIdsAndTime(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, body)
 }
 
+// UpdateSensorByIds godoc
+// @Summary     Update sensor readings by ID combinations
+// @Description Update sensor readings that match the specified ID combinations
+// @Tags        sensor
+// @Accept      json
+// @Produce     json
+// @Param       request body model.UpdateByIDsRequest true "ID combinations and new values"
+// @Success     200 {object} model.Envelope{data=model.UpdateResponse} "data: UpdateResponse"
+// @Failure     400 {object} model.Envelope{data=model.Empty} "error=true, message explains"
+// @Failure     500 {object} model.Envelope{data=model.Empty}
+// @Router      /sensor/update/ids [put]
 func (s *SensorRouterImpl) UpdateSensorByIds(ctx echo.Context) error {
-	return nil
+	usecase := *s.sensorUsecase
+	if usecase == nil {
+		return ctx.JSON(http.StatusInternalServerError, httpmodels.Body[httpmodels.Empty]{
+			Error:   true,
+			Message: "usecase is not provided",
+		})
+	}
+
+	// Parse JSON request body
+	var req model.UpdateByIDsRequest
+	if err := ctx.Bind(&req); err != nil {
+		return ctx.JSON(http.StatusBadRequest, httpmodels.Body[httpmodels.Empty]{
+			Error:   true,
+			Message: fmt.Sprintf("Invalid request body: %v", err),
+		})
+	}
+
+	// Validate request
+	if len(req.IDCombinations) == 0 {
+		return ctx.JSON(http.StatusBadRequest, httpmodels.Body[httpmodels.Empty]{
+			Error:   true,
+			Message: "At least one ID combination must be provided",
+		})
+	}
+
+	if req.SensorType == "" {
+		return ctx.JSON(http.StatusBadRequest, httpmodels.Body[httpmodels.Empty]{
+			Error:   true,
+			Message: "sensor_type is required",
+		})
+	}
+
+	// Convert to repository model
+	var idCombinations []repository.IDCombination
+	for _, combo := range req.IDCombinations {
+		idCombinations = append(idCombinations, repository.IDCombination{
+			ID1: combo.ID1,
+			ID2: combo.ID2,
+		})
+	}
+
+	// Call usecase
+	updatedCount, err := usecase.UpdateSensorByIds(ctx.Request().Context(), &idCombinations, req.SensorValue, req.SensorType)
+	if err != nil {
+		return ctx.JSON(http.StatusInternalServerError, httpmodels.Body[httpmodels.Empty]{
+			Error:   true,
+			Message: err.Error(),
+		})
+	}
+
+	body := httpmodels.Body[model.UpdateResponse]{
+		Data: model.UpdateResponse{
+			UpdatedCount: updatedCount.Count,
+			Message:      updatedCount.Message,
+		},
+	}
+	return ctx.JSON(http.StatusOK, body)
 }
 
+// UpdateSensorByTime godoc
+// @Summary     Update sensor readings by time range
+// @Description Update sensor readings that fall within the specified time range
+// @Tags        sensor
+// @Accept      json
+// @Produce     json
+// @Param       request body model.UpdateByTimeRequest true "Time range and new values"
+// @Success     200 {object} model.Envelope{data=model.UpdateResponse} "data: UpdateResponse"
+// @Failure     400 {object} model.Envelope{data=model.Empty} "error=true, message explains"
+// @Failure     500 {object} model.Envelope{data=model.Empty}
+// @Router      /sensor/update/time [put]
 func (s *SensorRouterImpl) UpdateSensorByTime(ctx echo.Context) error {
-	return nil
+	usecase := *s.sensorUsecase
+	if usecase == nil {
+		return ctx.JSON(http.StatusInternalServerError, httpmodels.Body[httpmodels.Empty]{
+			Error:   true,
+			Message: "usecase is not provided",
+		})
+	}
+
+	// Parse JSON request body
+	var req model.UpdateByTimeRequest
+	if err := ctx.Bind(&req); err != nil {
+		return ctx.JSON(http.StatusBadRequest, httpmodels.Body[httpmodels.Empty]{
+			Error:   true,
+			Message: fmt.Sprintf("Invalid request body: %v", err),
+		})
+	}
+
+	// Validate time range
+	if req.FromTime.IsZero() || req.ToTime.IsZero() {
+		return ctx.JSON(http.StatusBadRequest, httpmodels.Body[httpmodels.Empty]{
+			Error:   true,
+			Message: "Both from_time and to_time must be provided",
+		})
+	}
+
+	if !req.FromTime.Before(req.ToTime) {
+		return ctx.JSON(http.StatusBadRequest, httpmodels.Body[httpmodels.Empty]{
+			Error:   true,
+			Message: "from_time must be before to_time",
+		})
+	}
+
+	if req.SensorType == "" {
+		return ctx.JSON(http.StatusBadRequest, httpmodels.Body[httpmodels.Empty]{
+			Error:   true,
+			Message: "sensor_type is required",
+		})
+	}
+
+	// Call usecase
+	updatedCount, err := usecase.UpdateSensorByTime(ctx.Request().Context(), req.FromTime, req.ToTime, req.SensorValue, req.SensorType)
+	if err != nil {
+		return ctx.JSON(http.StatusInternalServerError, httpmodels.Body[httpmodels.Empty]{
+			Error:   true,
+			Message: err.Error(),
+		})
+	}
+
+	body := httpmodels.Body[model.UpdateResponse]{
+		Data: model.UpdateResponse{
+			UpdatedCount: updatedCount.Count,
+			Message:      updatedCount.Message,
+		},
+	}
+	return ctx.JSON(http.StatusOK, body)
 }
 
+// UpdateSensorByIdsAndTime godoc
+// @Summary     Update sensor readings by ID combinations and time range
+// @Description Update sensor readings that match both the ID combinations and time range
+// @Tags        sensor
+// @Accept      json
+// @Produce     json
+// @Param       request body model.UpdateByIDsAndTimeRequest true "ID combinations, time range, and new values"
+// @Success     200 {object} model.Envelope{data=model.UpdateResponse} "data: UpdateResponse"
+// @Failure     400 {object} model.Envelope{data=model.Empty} "error=true, message explains"
+// @Failure     500 {object} model.Envelope{data=model.Empty}
+// @Router      /sensor/update/ids-time [put]
 func (s *SensorRouterImpl) UpdateSensorByIdsAndTime(ctx echo.Context) error {
-	return nil
+	usecase := *s.sensorUsecase
+	if usecase == nil {
+		return ctx.JSON(http.StatusInternalServerError, httpmodels.Body[httpmodels.Empty]{
+			Error:   true,
+			Message: "usecase is not provided",
+		})
+	}
+
+	// Parse JSON request body
+	var req model.UpdateByIDsAndTimeRequest
+	if err := ctx.Bind(&req); err != nil {
+		return ctx.JSON(http.StatusBadRequest, httpmodels.Body[httpmodels.Empty]{
+			Error:   true,
+			Message: fmt.Sprintf("Invalid request body: %v", err),
+		})
+	}
+
+	// Validate ID combinations
+	if len(req.IDCombinations) == 0 {
+		return ctx.JSON(http.StatusBadRequest, httpmodels.Body[httpmodels.Empty]{
+			Error:   true,
+			Message: "At least one ID combination must be provided",
+		})
+	}
+
+	// Validate time range
+	if req.FromTime.IsZero() || req.ToTime.IsZero() {
+		return ctx.JSON(http.StatusBadRequest, httpmodels.Body[httpmodels.Empty]{
+			Error:   true,
+			Message: "Both from_time and to_time must be provided",
+		})
+	}
+
+	if !req.FromTime.Before(req.ToTime) {
+		return ctx.JSON(http.StatusBadRequest, httpmodels.Body[httpmodels.Empty]{
+			Error:   true,
+			Message: "from_time must be before to_time",
+		})
+	}
+
+	if req.SensorType == "" {
+		return ctx.JSON(http.StatusBadRequest, httpmodels.Body[httpmodels.Empty]{
+			Error:   true,
+			Message: "sensor_type is required",
+		})
+	}
+
+	// Convert to repository model
+	var idCombinations []repository.IDCombination
+	for _, combo := range req.IDCombinations {
+		idCombinations = append(idCombinations, repository.IDCombination{
+			ID1: combo.ID1,
+			ID2: combo.ID2,
+		})
+	}
+
+	// Call usecase
+	updatedCount, err := usecase.UpdateSensorByIdsAndTime(ctx.Request().Context(), &idCombinations, req.FromTime, req.ToTime, req.SensorValue, req.SensorType)
+	if err != nil {
+		return ctx.JSON(http.StatusInternalServerError, httpmodels.Body[httpmodels.Empty]{
+			Error:   true,
+			Message: err.Error(),
+		})
+	}
+
+	body := httpmodels.Body[model.UpdateResponse]{
+		Data: model.UpdateResponse{
+			UpdatedCount: updatedCount.Count,
+			Message:      updatedCount.Message,
+		},
+	}
+	return ctx.JSON(http.StatusOK, body)
 }
 
 // GetSensorDataPaginated godoc

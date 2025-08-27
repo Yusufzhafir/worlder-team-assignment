@@ -103,6 +103,77 @@ definitions:
         example: 23.5
         type: number
     type: object
+  model.UpdateByIDsAndTimeRequest:
+    properties:
+      from_time:
+        example: "2023-01-01T00:00:00Z"
+        type: string
+      id_combinations:
+        items:
+          $ref: '#/definitions/model.IDCombination'
+        minItems: 1
+        type: array
+      sensor_type:
+        example: temperature
+        type: string
+      sensor_value:
+        example: 25.5
+        type: number
+      to_time:
+        example: "2023-12-31T23:59:59Z"
+        type: string
+    required:
+    - from_time
+    - id_combinations
+    - sensor_type
+    - sensor_value
+    - to_time
+    type: object
+  model.UpdateByIDsRequest:
+    properties:
+      id_combinations:
+        items:
+          $ref: '#/definitions/model.IDCombination'
+        minItems: 1
+        type: array
+      sensor_type:
+        example: temperature
+        type: string
+      sensor_value:
+        example: 25.5
+        type: number
+    required:
+    - id_combinations
+    - sensor_type
+    - sensor_value
+    type: object
+  model.UpdateByTimeRequest:
+    properties:
+      from_time:
+        example: "2023-01-01T00:00:00Z"
+        type: string
+      sensor_type:
+        example: temperature
+        type: string
+      sensor_value:
+        example: 25.5
+        type: number
+      to_time:
+        example: "2023-12-31T23:59:59Z"
+        type: string
+    required:
+    - from_time
+    - sensor_type
+    - sensor_value
+    - to_time
+    type: object
+  model.UpdateResponse:
+    properties:
+      message:
+        type: string
+      updated_count:
+        type: integer
+    type: object
 host: localhost:8080
 info:
   contact:
@@ -496,6 +567,142 @@ paths:
                   $ref: '#/definitions/model.Empty'
               type: object
       summary: List sensor readings filter by time(paginated)
+      tags:
+      - sensor
+  /sensor/update/ids:
+    put:
+      consumes:
+      - application/json
+      description: Update sensor readings that match the specified ID combinations
+      parameters:
+      - description: ID combinations and new values
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.UpdateByIDsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'data: UpdateResponse'
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.UpdateResponse'
+              type: object
+        "400":
+          description: error=true, message explains
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.Empty'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.Empty'
+              type: object
+      summary: Update sensor readings by ID combinations
+      tags:
+      - sensor
+  /sensor/update/ids-time:
+    put:
+      consumes:
+      - application/json
+      description: Update sensor readings that match both the ID combinations and
+        time range
+      parameters:
+      - description: ID combinations, time range, and new values
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.UpdateByIDsAndTimeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'data: UpdateResponse'
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.UpdateResponse'
+              type: object
+        "400":
+          description: error=true, message explains
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.Empty'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.Empty'
+              type: object
+      summary: Update sensor readings by ID combinations and time range
+      tags:
+      - sensor
+  /sensor/update/time:
+    put:
+      consumes:
+      - application/json
+      description: Update sensor readings that fall within the specified time range
+      parameters:
+      - description: Time range and new values
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.UpdateByTimeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'data: UpdateResponse'
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.UpdateResponse'
+              type: object
+        "400":
+          description: error=true, message explains
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.Empty'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.Empty'
+              type: object
+      summary: Update sensor readings by time range
       tags:
       - sensor
 securityDefinitions:
