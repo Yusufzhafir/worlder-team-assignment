@@ -2,13 +2,14 @@ package router
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/Yusufzhafir/worlder-team-assignment/b-service/repository"
-	payload "github.com/Yusufzhafir/worlder-team-assignment/b-service/router/sensor/model"
+	"github.com/Yusufzhafir/worlder-team-assignment/b-service/router/sensor/model"
 	httpmodels "github.com/Yusufzhafir/worlder-team-assignment/b-service/shared/model"
 	"github.com/Yusufzhafir/worlder-team-assignment/b-service/usecase"
 	"github.com/labstack/echo/v4"
@@ -39,19 +40,19 @@ func NewSensorRouter(sensorUsecase *usecase.SensorUseCase) SensorRouter {
 
 // parseTimeRange parses time range from query parameters
 func parseTimeRange(ctx echo.Context) (time.Time, time.Time, error) {
-	fromStr := ctx.QueryParam("from_time")
-	toStr := ctx.QueryParam("to_time")
+	fromStr := ctx.QueryParam("from")
+	toStr := ctx.QueryParam("to")
 
 	if fromStr == "" || toStr == "" {
 		return time.Time{}, time.Time{}, fmt.Errorf("both from_time and to_time must be provided")
 	}
 
-	fromTime, err := time.Parse(time.RFC3339, fromStr)
+	fromTime, err := time.Parse(time.RFC3339Nano, fromStr)
 	if err != nil {
 		return time.Time{}, time.Time{}, fmt.Errorf("invalid from_time format: %v (use RFC3339 format like 2023-01-01T00:00:00Z)", err)
 	}
 
-	toTime, err := time.Parse(time.RFC3339, toStr)
+	toTime, err := time.Parse(time.RFC3339Nano, toStr)
 	if err != nil {
 		return time.Time{}, time.Time{}, fmt.Errorf("invalid to_time format: %v (use RFC3339 format like 2023-01-01T00:00:00Z)", err)
 	}
@@ -59,6 +60,8 @@ func parseTimeRange(ctx echo.Context) (time.Time, time.Time, error) {
 	if !fromTime.Before(toTime) {
 		return time.Time{}, time.Time{}, fmt.Errorf("from_time must be before to_time")
 	}
+
+	log.Default().Printf("this is converted millis converted %f, %f", fromTime.UnixMilli(), toTime.UnixMilli())
 
 	return fromTime, toTime, nil
 }
@@ -130,10 +133,10 @@ func (s *SensorRouterImpl) GetSensorDataByIds(ctx echo.Context) error {
 		})
 	}
 
-	newPayload := make([]payload.SensorPayload, len(result.Data))
+	newPayload := make([]model.SensorPayload, len(result.Data))
 	for i := 0; i < len(result.Data); i++ {
 		currElement := result.Data[i]
-		newPayload[i] = payload.SensorPayload{
+		newPayload[i] = model.SensorPayload{
 			ID1:         currElement.ID1,
 			ID2:         currElement.ID2,
 			SensorType:  currElement.SensorType,
@@ -142,8 +145,8 @@ func (s *SensorRouterImpl) GetSensorDataByIds(ctx echo.Context) error {
 		}
 	}
 
-	body := httpmodels.Body[payload.SensorPage]{
-		Data: payload.SensorPage{
+	body := httpmodels.Body[model.SensorPage]{
+		Data: model.SensorPage{
 			Items:    newPayload,
 			Page:     page,
 			PageSize: size,
@@ -241,10 +244,10 @@ func (s *SensorRouterImpl) GetSensorDataByTime(ctx echo.Context) error {
 	if err != nil {
 		return ctx.JSON(http.StatusInternalServerError, httpmodels.Body[httpmodels.Empty]{Error: true, Message: err.Error()})
 	}
-	newPayload := make([]payload.SensorPayload, len(result.Data))
+	newPayload := make([]model.SensorPayload, len(result.Data))
 	for i := 0; i < len(result.Data); i++ {
 		currElement := result.Data[i]
-		newPayload[i] = payload.SensorPayload{
+		newPayload[i] = model.SensorPayload{
 			ID1:         currElement.ID1,
 			ID2:         currElement.ID2,
 			SensorType:  currElement.SensorType,
@@ -252,8 +255,8 @@ func (s *SensorRouterImpl) GetSensorDataByTime(ctx echo.Context) error {
 			TimestampMs: currElement.TS.Unix(),
 		}
 	}
-	body := httpmodels.Body[payload.SensorPage]{
-		Data: payload.SensorPage{
+	body := httpmodels.Body[model.SensorPage]{
+		Data: model.SensorPage{
 			Items:    newPayload,
 			Page:     page,
 			PageSize: size,
@@ -263,7 +266,7 @@ func (s *SensorRouterImpl) GetSensorDataByTime(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, body)
 }
 
-// GetSensorDataByIdssAndTime godoc
+// GetSensorDataByIdsAndTime godoc
 // @Summary     List sensor readings filtered by ID combinations and time range (paginated)
 // @Tags        sensor
 // @Accept      json
@@ -272,8 +275,8 @@ func (s *SensorRouterImpl) GetSensorDataByTime(ctx echo.Context) error {
 // @Param       page_size  query   int    false  "Page size"                minimum(1) maximum(500) default(50)
 // @Param       id1        query   string false  "Comma-separated ID1 values" example(0,1,2)
 // @Param       id2        query   string false  "Comma-separated ID2 values" example(A,B,C)
-// @Param       from_time  query   string true   "Start time (RFC3339Nano)"     example(2025-08-25T18:00:24.947000+07:00)
-// @Param       to_time    query   string true   "End time (RFC3339Nano)"       example(2025-08-25T19:00:24.947000+07:00)
+// @Param       from  query   string true   "Start time (RFC3339Nano)"     example(2025-08-25T18:00:24.947000+07:00)
+// @Param       to    query   string true   "End time (RFC3339Nano)"       example(2025-08-25T19:00:24.947000+07:00)
 // @Success     200 {object} model.Envelope{data=model.SensorPage} "data: SensorPage"
 // @Failure     400 {object} model.Envelope{data=model.Empty} "error=true, message explains"
 // @Failure     500 {object} model.Envelope{data=model.Empty}
@@ -327,10 +330,10 @@ func (s *SensorRouterImpl) GetSensorDataByIdsAndTime(ctx echo.Context) error {
 		})
 	}
 
-	newPayload := make([]payload.SensorPayload, len(result.Data))
+	newPayload := make([]model.SensorPayload, len(result.Data))
 	for i := 0; i < len(result.Data); i++ {
 		currElement := result.Data[i]
-		newPayload[i] = payload.SensorPayload{
+		newPayload[i] = model.SensorPayload{
 			ID1:         currElement.ID1,
 			ID2:         currElement.ID2,
 			SensorType:  currElement.SensorType,
@@ -339,8 +342,8 @@ func (s *SensorRouterImpl) GetSensorDataByIdsAndTime(ctx echo.Context) error {
 		}
 	}
 
-	body := httpmodels.Body[payload.SensorPage]{
-		Data: payload.SensorPage{
+	body := httpmodels.Body[model.SensorPage]{
+		Data: model.SensorPage{
 			Items:    newPayload,
 			Page:     page,
 			PageSize: size,
@@ -350,16 +353,199 @@ func (s *SensorRouterImpl) GetSensorDataByIdsAndTime(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, body)
 }
 
+// DeleteSensorByIds godoc
+// @Summary     Delete sensor readings by ID combinations
+// @Description Delete sensor readings that match the specified ID combinations
+// @Tags        sensor
+// @Accept      json
+// @Produce     json
+// @Param       request body model.DeleteByIDsRequest true "ID combinations to delete"
+// @Success     200 {object} model.Envelope{data=model.DeleteResponse} "data: DeleteResponse"
+// @Failure     400 {object} model.Envelope{data=model.Empty} "error=true, message explains"
+// @Failure     500 {object} model.Envelope{data=model.Empty}
+// @Router      /sensor/delete/ids [delete]
 func (s *SensorRouterImpl) DeleteSensorByIds(ctx echo.Context) error {
-	return nil
+	usecase := *s.sensorUsecase
+	if usecase == nil {
+		return ctx.JSON(http.StatusInternalServerError, httpmodels.Body[httpmodels.Empty]{
+			Error:   true,
+			Message: "usecase is not provided",
+		})
+	}
+
+	// Parse JSON request body
+	var req model.DeleteByIDsRequest
+	if err := ctx.Bind(&req); err != nil {
+		return ctx.JSON(http.StatusBadRequest, httpmodels.Body[httpmodels.Empty]{
+			Error:   true,
+			Message: fmt.Sprintf("Invalid request body: %v", err),
+		})
+	}
+
+	// Validate request
+	if len(req.IDCombinations) == 0 {
+		return ctx.JSON(http.StatusBadRequest, httpmodels.Body[httpmodels.Empty]{
+			Error:   true,
+			Message: "At least one ID combination must be provided",
+		})
+	}
+
+	// Convert to repository model
+	var idCombinations []repository.IDCombination
+	for _, combo := range req.IDCombinations {
+		idCombinations = append(idCombinations, repository.IDCombination{
+			ID1: combo.ID1,
+			ID2: combo.ID2,
+		})
+	}
+
+	// Call usecase
+	deletedCount, err := usecase.DeleteSensorByIds(ctx.Request().Context(), &idCombinations)
+	if err != nil {
+		return ctx.JSON(http.StatusInternalServerError, httpmodels.Body[httpmodels.Empty]{
+			Error:   true,
+			Message: err.Error(),
+		})
+	}
+
+	body := httpmodels.Body[model.DeleteResponse]{
+		Data: model.DeleteResponse{
+			DeletedCount: deletedCount.Count,
+			Message:      deletedCount.Message,
+		},
+	}
+	return ctx.JSON(http.StatusOK, body)
 }
 
+// DeleteSensorByTime godoc
+// @Summary     Delete sensor readings by time range
+// @Description Delete sensor readings that fall within the specified time range
+// @Tags        sensor
+// @Accept      json
+// @Produce     json
+// @Param       request body model.DeleteByTimeRequest true "Time range to delete"
+// @Success     200 {object} model.Envelope{data=model.DeleteResponse} "data: DeleteResponse"
+// @Failure     400 {object} model.Envelope{data=model.Empty} "error=true, message explains"
+// @Failure     500 {object} model.Envelope{data=model.Empty}
+// @Router      /sensor/delete/time [delete]
 func (s *SensorRouterImpl) DeleteSensorByTime(ctx echo.Context) error {
-	return nil
+	usecase := *s.sensorUsecase
+	if usecase == nil {
+		return ctx.JSON(http.StatusInternalServerError, httpmodels.Body[httpmodels.Empty]{
+			Error:   true,
+			Message: "usecase is not provided",
+		})
+	}
+
+	// Parse JSON request body
+	var req model.DeleteByTimeRequest
+	if err := ctx.Bind(&req); err != nil {
+		return ctx.JSON(http.StatusBadRequest, httpmodels.Body[httpmodels.Empty]{
+			Error:   true,
+			Message: fmt.Sprintf("Invalid request body: %v", err),
+		})
+	}
+
+	// Validate time range
+	if req.FromTime.IsZero() || req.ToTime.IsZero() {
+		return ctx.JSON(http.StatusBadRequest, httpmodels.Body[httpmodels.Empty]{
+			Error:   true,
+			Message: "Both from_time and to_time must be provided",
+		})
+	}
+
+	if !req.FromTime.Before(req.ToTime) {
+		return ctx.JSON(http.StatusBadRequest, httpmodels.Body[httpmodels.Empty]{
+			Error:   true,
+			Message: "from_time must be before to_time",
+		})
+	}
+
+	// Call usecase
+	deletedCount, err := usecase.DeleteSensorByTime(ctx.Request().Context(), req.FromTime, req.ToTime)
+	if err != nil {
+		return ctx.JSON(http.StatusInternalServerError, httpmodels.Body[httpmodels.Empty]{
+			Error:   true,
+			Message: err.Error(),
+		})
+	}
+
+	body := httpmodels.Body[model.DeleteResponse]{
+		Data: model.DeleteResponse{
+			DeletedCount: deletedCount.Count,
+			Message:      deletedCount.Message,
+		},
+	}
+	return ctx.JSON(http.StatusOK, body)
 }
 
+// DeleteSensorByTime godoc
+// @Summary     Delete sensor readings by time range
+// @Description Delete sensor readings that fall within the specified time range
+// @Tags        sensor
+// @Accept      json
+// @Produce     json
+// @Param       request body model.DeleteByIDAndTimesRequest true "Time range to delete"
+// @Success     200 {object} model.Envelope{data=model.DeleteResponse} "data: DeleteResponse"
+// @Failure     400 {object} model.Envelope{data=model.Empty} "error=true, message explains"
+// @Failure     500 {object} model.Envelope{data=model.Empty}
+// @Router      /sensor/delete/ids-time [delete]
 func (s *SensorRouterImpl) DeleteSensorByIdsAndTime(ctx echo.Context) error {
-	return nil
+	usecase := *s.sensorUsecase
+	if usecase == nil {
+		return ctx.JSON(http.StatusInternalServerError, httpmodels.Body[httpmodels.Empty]{
+			Error:   true,
+			Message: "usecase is not provided",
+		})
+	}
+
+	// Parse JSON request body
+	var req model.DeleteByIDAndTimesRequest
+	if err := ctx.Bind(&req); err != nil {
+		return ctx.JSON(http.StatusBadRequest, httpmodels.Body[httpmodels.Empty]{
+			Error:   true,
+			Message: fmt.Sprintf("Invalid request body: %v", err),
+		})
+	}
+
+	// Validate time range
+	if req.FromTime.IsZero() || req.ToTime.IsZero() {
+		return ctx.JSON(http.StatusBadRequest, httpmodels.Body[httpmodels.Empty]{
+			Error:   true,
+			Message: "Both from_time and to_time must be provided",
+		})
+	}
+
+	if !req.FromTime.Before(req.ToTime) {
+		return ctx.JSON(http.StatusBadRequest, httpmodels.Body[httpmodels.Empty]{
+			Error:   true,
+			Message: "from_time must be before to_time",
+		})
+	}
+
+	idCombinationUsecase := make([]repository.IDCombination, len(req.IDCombinations))
+	for i, val := range req.IDCombinations {
+		idCombinationUsecase[i] = repository.IDCombination{
+			ID1: val.ID1,
+			ID2: val.ID2,
+		}
+	}
+	// Call usecase
+	deletedCount, err := usecase.DeleteSensorByIdsAndTime(ctx.Request().Context(), &idCombinationUsecase, req.FromTime, req.ToTime)
+	if err != nil {
+		return ctx.JSON(http.StatusInternalServerError, httpmodels.Body[httpmodels.Empty]{
+			Error:   true,
+			Message: err.Error(),
+		})
+	}
+
+	body := httpmodels.Body[model.DeleteResponse]{
+		Data: model.DeleteResponse{
+			DeletedCount: deletedCount.Count,
+			Message:      deletedCount.Message,
+		},
+	}
+	return ctx.JSON(http.StatusOK, body)
 }
 
 func (s *SensorRouterImpl) UpdateSensorByIds(ctx echo.Context) error {
@@ -391,8 +577,8 @@ func (s *SensorRouterImpl) GetSensorDataPaginated(ctx echo.Context) error {
 	if page == "" || pageSize == "" {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide valid query param")
 	}
-	body := httpmodels.Body[payload.SensorPayload]{
-		Data: payload.SensorPayload{
+	body := httpmodels.Body[model.SensorPayload]{
+		Data: model.SensorPayload{
 			ID1:         "10",
 			SensorType:  "alksjd",
 			Value:       10,

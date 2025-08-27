@@ -113,6 +113,252 @@ const docTemplate = `{
                 }
             }
         },
+        "/sensor/delete/ids": {
+            "delete": {
+                "description": "Delete sensor readings that match the specified ID combinations",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sensor"
+                ],
+                "summary": "Delete sensor readings by ID combinations",
+                "parameters": [
+                    {
+                        "description": "ID combinations to delete",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.DeleteByIDsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "data: DeleteResponse",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.DeleteResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "error=true, message explains",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.Empty"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.Empty"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/sensor/delete/ids-time": {
+            "delete": {
+                "description": "Delete sensor readings that fall within the specified time range",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sensor"
+                ],
+                "summary": "Delete sensor readings by time range",
+                "parameters": [
+                    {
+                        "description": "Time range to delete",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.DeleteByIDAndTimesRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "data: DeleteResponse",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.DeleteResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "error=true, message explains",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.Empty"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.Empty"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/sensor/delete/time": {
+            "delete": {
+                "description": "Delete sensor readings that fall within the specified time range",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sensor"
+                ],
+                "summary": "Delete sensor readings by time range",
+                "parameters": [
+                    {
+                        "description": "Time range to delete",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.DeleteByTimeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "data: DeleteResponse",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.DeleteResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "error=true, message explains",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.Empty"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.Empty"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/sensor/ids": {
             "get": {
                 "consumes": [
@@ -262,17 +508,17 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "example": "2023-01-01T00:00:00Z",
-                        "description": "Start time (RFC3339)",
-                        "name": "from_time",
+                        "example": "2025-08-25T18:00:24.947000+07:00",
+                        "description": "Start time (RFC3339Nano)",
+                        "name": "from",
                         "in": "query",
                         "required": true
                     },
                     {
                         "type": "string",
-                        "example": "2023-12-31T23:59:59Z",
-                        "description": "End time (RFC3339)",
-                        "name": "to_time",
+                        "example": "2025-08-25T19:00:24.947000+07:00",
+                        "description": "End time (RFC3339Nano)",
+                        "name": "to",
                         "in": "query",
                         "required": true
                     }
@@ -374,7 +620,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "default": "2006-01-02T15:04:05.999999999+07:00",
+                        "default": "2006-01-02T16:04:05.999999999+07:00",
                         "description": "to time",
                         "name": "to",
                         "in": "query"
@@ -440,6 +686,74 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "model.DeleteByIDAndTimesRequest": {
+            "type": "object",
+            "required": [
+                "from_time",
+                "id_combinations",
+                "to_time"
+            ],
+            "properties": {
+                "from_time": {
+                    "type": "string",
+                    "example": "2025-08-25T18:00:24.947000+07:00"
+                },
+                "id_combinations": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/model.IDCombination"
+                    }
+                },
+                "to_time": {
+                    "type": "string",
+                    "example": "2025-08-25T19:00:24.947000+07:00"
+                }
+            }
+        },
+        "model.DeleteByIDsRequest": {
+            "type": "object",
+            "required": [
+                "id_combinations"
+            ],
+            "properties": {
+                "id_combinations": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/model.IDCombination"
+                    }
+                }
+            }
+        },
+        "model.DeleteByTimeRequest": {
+            "type": "object",
+            "required": [
+                "from_time",
+                "to_time"
+            ],
+            "properties": {
+                "from_time": {
+                    "type": "string",
+                    "example": "2025-08-25T18:00:24.947000+07:00"
+                },
+                "to_time": {
+                    "type": "string",
+                    "example": "2025-08-25T19:00:24.947000+07:00"
+                }
+            }
+        },
+        "model.DeleteResponse": {
+            "type": "object",
+            "properties": {
+                "deleted_count": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
         "model.Empty": {
             "type": "object"
         },
@@ -454,6 +768,21 @@ const docTemplate = `{
                 "message": {
                     "type": "string",
                     "example": "ok"
+                }
+            }
+        },
+        "model.IDCombination": {
+            "type": "object",
+            "required": [
+                "id1",
+                "id2"
+            ],
+            "properties": {
+                "id1": {
+                    "type": "string"
+                },
+                "id2": {
+                    "type": "integer"
                 }
             }
         },

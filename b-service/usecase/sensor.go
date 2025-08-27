@@ -16,6 +16,12 @@ type SensorUseCase interface {
 	GetSensorByTime(ctx context.Context, from time.Time, to time.Time, limit int, offset int) (paginatedSensor, error)
 	GetSensorByIDs(ctx context.Context, idCombinationPtr *[]repository.IDCombination, limit int, offset int) (paginatedSensor, error)
 	GetSensorByIDsAndTime(ctx context.Context, idCombinationPtr *[]repository.IDCombination, from time.Time, to time.Time, limit int, offset int) (paginatedSensor, error)
+	DeleteSensorByIds(ctx context.Context, idCombinationPtr *[]repository.IDCombination) (mutatedResponse, error)
+	DeleteSensorByTime(ctx context.Context, from time.Time, to time.Time) (mutatedResponse, error)
+	DeleteSensorByIdsAndTime(ctx context.Context, idCombinationPtr *[]repository.IDCombination, from time.Time, to time.Time) (mutatedResponse, error)
+	UpdateSensorByIds(ctx context.Context, idCombinationPtr *[]repository.IDCombination, sensorValue float64, sensorType string) (mutatedResponse, error)
+	UpdateSensorByTime(ctx context.Context, from time.Time, to time.Time, sensorValue float64, sensorType string) (mutatedResponse, error)
+	UpdateSensorByIdsAndTime(ctx context.Context, idCombinationPtr *[]repository.IDCombination, from time.Time, to time.Time, sensorValue float64, sensorType string) (mutatedResponse, error)
 }
 
 type SensorUseCaseImpl struct {
@@ -129,6 +135,125 @@ func (sensorUseCase *SensorUseCaseImpl) GetSensorByIDsAndTime(ctx context.Contex
 
 	result.Count = count
 	result.Data = rows
+
+	return result, nil
+}
+
+type mutatedResponse struct {
+	Message string
+	Count   int64
+}
+
+func (sensorUseCase *SensorUseCaseImpl) DeleteSensorByIds(ctx context.Context, idCombinationPtr *[]repository.IDCombination) (mutatedResponse, error) {
+	repo := *sensorUseCase.repo
+	result := mutatedResponse{}
+	idCombination := *idCombinationPtr
+	if repo == nil {
+		return result, fmt.Errorf("repository object is nil %v", repo)
+	}
+
+	rows, err := repo.DeleteByIDs(ctx, sensorUseCase.db, idCombination)
+	if err != nil {
+		return result, err
+	}
+
+	result.Count = rows
+	result.Message = "Successfully deleted rows by Ids"
+
+	return result, nil
+}
+
+func (sensorUseCase *SensorUseCaseImpl) DeleteSensorByTime(ctx context.Context, from time.Time, to time.Time) (mutatedResponse, error) {
+	repo := *sensorUseCase.repo
+	result := mutatedResponse{}
+
+	if repo == nil {
+		return result, fmt.Errorf("repository object is nil %v", repo)
+	}
+
+	rows, err := repo.DeleteByTime(ctx, sensorUseCase.db, from, to)
+	if err != nil {
+		return result, err
+	}
+
+	result.Count = rows
+	result.Message = "Successfully deleted rows by Time"
+
+	return result, nil
+}
+
+func (sensorUseCase *SensorUseCaseImpl) DeleteSensorByIdsAndTime(ctx context.Context, idCombinationPtr *[]repository.IDCombination, from time.Time, to time.Time) (mutatedResponse, error) {
+	repo := *sensorUseCase.repo
+	result := mutatedResponse{}
+	idCombination := *idCombinationPtr
+	if repo == nil {
+		return result, fmt.Errorf("repository object is nil %v", repo)
+	}
+
+	rows, err := repo.DeleteByIDsAndTime(ctx, sensorUseCase.db, idCombination, from, to)
+	if err != nil {
+		return result, err
+	}
+
+	result.Count = rows
+	result.Message = "Successfully deleted rows by Ids and Time"
+
+	return result, nil
+}
+
+func (sensorUseCase *SensorUseCaseImpl) UpdateSensorByIds(ctx context.Context, idCombinationPtr *[]repository.IDCombination, sensorValue float64, sensorType string) (mutatedResponse, error) {
+	repo := *sensorUseCase.repo
+	result := mutatedResponse{}
+	idCombination := *idCombinationPtr
+	if repo == nil {
+		return result, fmt.Errorf("repository object is nil %v", repo)
+	}
+
+	rows, err := repo.UpdateByIDs(ctx, sensorUseCase.db, idCombination, sensorValue, sensorType)
+	if err != nil {
+		return result, err
+	}
+
+	result.Count = rows
+	result.Message = "Successfully updated rows by Ids"
+
+	return result, nil
+}
+
+func (sensorUseCase *SensorUseCaseImpl) UpdateSensorByTime(ctx context.Context, from time.Time, to time.Time, sensorValue float64, sensorType string) (mutatedResponse, error) {
+	repo := *sensorUseCase.repo
+	result := mutatedResponse{}
+
+	if repo == nil {
+		return result, fmt.Errorf("repository object is nil %v", repo)
+	}
+
+	rows, err := repo.UpdateByTime(ctx, sensorUseCase.db, from, to, sensorValue, sensorType)
+	if err != nil {
+		return result, err
+	}
+
+	result.Count = rows
+	result.Message = "Successfully updated rows by Time"
+
+	return result, nil
+}
+
+func (sensorUseCase *SensorUseCaseImpl) UpdateSensorByIdsAndTime(ctx context.Context, idCombinationPtr *[]repository.IDCombination, from time.Time, to time.Time, sensorValue float64, sensorType string) (mutatedResponse, error) {
+	repo := *sensorUseCase.repo
+	result := mutatedResponse{}
+	idCombination := *idCombinationPtr
+	if repo == nil {
+		return result, fmt.Errorf("repository object is nil %v", repo)
+	}
+
+	rows, err := repo.UpdateByIDsAndTime(ctx, sensorUseCase.db, idCombination, from, to, sensorValue, sensorType)
+	if err != nil {
+		return result, err
+	}
+
+	result.Count = rows
+	result.Message = "Successfully updated rows by Ids and Time"
 
 	return result, nil
 }

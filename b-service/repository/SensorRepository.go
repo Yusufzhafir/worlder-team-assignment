@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -320,6 +321,7 @@ LIMIT ? OFFSET ?
 
 	args = append(args, startTime, stopTime, limit, offset)
 
+	log.Default().Printf("start %v stop %v", startTime, stopTime)
 	rows, err := db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
