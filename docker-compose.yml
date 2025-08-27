@@ -48,7 +48,6 @@ services:
     build:
       context: .
       dockerfile: ./a-service/Dockerfile
-    container_name: a-service
     depends_on:
       b-service:
         # Wait until b-service is healthy (requires HEALTHCHECK in its image)

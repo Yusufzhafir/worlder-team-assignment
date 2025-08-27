@@ -72,6 +72,7 @@ func main() {
 	} else {
 		connString = "localhost:50051"
 	}
+	logger.Print("connection string :", connString)
 	dg := usecase.NewDataGenerator(connString)
 	err = dg.Connect()
 	if err != nil {

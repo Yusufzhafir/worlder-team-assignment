@@ -1,0 +1,9 @@
+docker run -d -p 9001:9000 -e SERVER_ADDR=b-service:50051 --network worlder-team-assignment_appnet --name a-service10  worlder-team-assignment-a-service
+docker run -d -p 9002:9000 -e SERVER_ADDR=b-service:50051 --network worlder-team-assignment_appnet --name a-service2  worlder-team-assignment-a-service
+docker run -d -p 9003:9000 -e SERVER_ADDR=b-service:50051 --network worlder-team-assignment_appnet --name a-service3  worlder-team-assignment-a-service
+docker run -d -p 9004:9000 -e SERVER_ADDR=b-service:50051 --network worlder-team-assignment_appnet --name a-service4  worlder-team-assignment-a-service
+docker run -d -p 9005:9000 -e SERVER_ADDR=b-service:50051 --network worlder-team-assignment_appnet --name a-service5  worlder-team-assignment-a-service
+docker run -d -p 9006:9000 -e SERVER_ADDR=b-service:50051 --network worlder-team-assignment_appnet --name a-service6  worlder-team-assignment-a-service
+docker run -d -p 9007:9000 -e SERVER_ADDR=b-service:50051 --network worlder-team-assignment_appnet --name a-service7  worlder-team-assignment-a-service
+docker run -d -p 9008:9000 -e SERVER_ADDR=b-service:50051 --network worlder-team-assignment_appnet --name a-service8  worlder-team-assignment-a-service
+docker run -d -p 9009:9000 -e SERVER_ADDR=b-service:50051 --network worlder-team-assignment_appnet --name a-service9  worlder-team-assignment-a-service
