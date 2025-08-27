@@ -13,6 +13,7 @@ import (
 
 type SensorUseCase interface {
 	InsertSensor(ctx context.Context, data *pb.SensorReading) error
+	GetSensorPaginated(ctx context.Context, limit int, offset int) (paginatedSensor, error)
 	GetSensorByTime(ctx context.Context, from time.Time, to time.Time, limit int, offset int) (paginatedSensor, error)
 	GetSensorByIDs(ctx context.Context, idCombinationPtr *[]repository.IDCombination, limit int, offset int) (paginatedSensor, error)
 	GetSensorByIDsAndTime(ctx context.Context, idCombinationPtr *[]repository.IDCombination, from time.Time, to time.Time, limit int, offset int) (paginatedSensor, error)
@@ -83,6 +84,28 @@ func (sensorUseCase *SensorUseCaseImpl) GetSensorByTime(ctx context.Context, fro
 		return result, err
 	}
 	count, err := repo.SelectCountByTime(ctx, sensorUseCase.db, from, to)
+	if err != nil {
+		return result, err
+	}
+
+	result.Count = count
+	result.Data = rows
+
+	return result, nil
+}
+
+func (sensorUseCase *SensorUseCaseImpl) GetSensorPaginated(ctx context.Context, limit int, offset int) (paginatedSensor, error) {
+	repo := *sensorUseCase.repo
+	result := paginatedSensor{}
+	if repo == nil {
+		return result, fmt.Errorf("repository object is nil %v", repo)
+	}
+
+	rows, err := repo.SelectSensorDataPaginated(ctx, sensorUseCase.db, limit, offset)
+	if err != nil {
+		return result, err
+	}
+	count, err := repo.SelectCountPagination(ctx, sensorUseCase.db)
 	if err != nil {
 		return result, err
 	}

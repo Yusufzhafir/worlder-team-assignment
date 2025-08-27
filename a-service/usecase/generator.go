@@ -166,6 +166,8 @@ func (dg *DataGeneratorImpl) generateContinuously() {
 	ticker := time.NewTicker(dg.frequency)
 	defer ticker.Stop()
 
+	// Keep track of the current ticker frequency
+	currentFreq := dg.frequency
 	for {
 		select {
 		case <-dg.stopChan:
@@ -173,12 +175,14 @@ func (dg *DataGeneratorImpl) generateContinuously() {
 		case <-ticker.C:
 			// Update ticker frequency if changed
 			dg.mu.RLock()
-			currentFreq := dg.frequency
+			newFreq := dg.frequency
+			log.Default().Printf("this is the current frequency %v", currentFreq)
 			dg.mu.RUnlock()
 
-			if ticker.C == nil || currentFreq != dg.frequency {
+			if newFreq != currentFreq {
 				ticker.Stop()
-				ticker = time.NewTicker(currentFreq)
+				ticker = time.NewTicker(newFreq)
+				currentFreq = newFreq
 			}
 
 			dg.sendSingleReading()

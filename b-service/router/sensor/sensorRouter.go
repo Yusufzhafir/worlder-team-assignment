@@ -783,17 +783,35 @@ func (s *SensorRouterImpl) UpdateSensorByIdsAndTime(ctx echo.Context) error {
 // @Failure     500 {object} model.Envelope{data=model.Empty}
 // @Router      /sensor [get]
 func (s *SensorRouterImpl) GetSensorDataPaginated(ctx echo.Context) error {
-	page := ctx.QueryParams().Get("page")
-	pageSize := ctx.QueryParams().Get("page_size")
-	if page == "" || pageSize == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Please provide valid query param")
+	usecase := *s.sensorUsecase
+	page, size, offset, err := validatePagination(ctx)
+	if err != nil {
+		return err
 	}
-	body := httpmodels.Body[model.SensorPayload]{
-		Data: model.SensorPayload{
-			ID1:         "10",
-			SensorType:  "alksjd",
-			Value:       10,
-			TimestampMs: time.Now().Unix(),
+	result, err := usecase.GetSensorPaginated(ctx.Request().Context(), size, offset)
+	if err != nil {
+		return ctx.JSON(http.StatusInternalServerError, httpmodels.Body[httpmodels.Empty]{
+			Error:   true,
+			Message: err.Error(),
+		})
+	}
+	newPayload := make([]model.SensorPayload, len(result.Data))
+	for i := 0; i < len(result.Data); i++ {
+		currElement := result.Data[i]
+		newPayload[i] = model.SensorPayload{
+			ID1:         currElement.ID1,
+			ID2:         currElement.ID2,
+			SensorType:  currElement.SensorType,
+			Value:       currElement.SensorValue,
+			TimestampMs: currElement.TS.Unix(),
+		}
+	}
+	body := httpmodels.Body[model.SensorPage]{
+		Data: model.SensorPage{
+			Items:    newPayload,
+			Page:     page,
+			PageSize: size,
+			Total:    result.Count,
 		},
 	}
 	return ctx.JSON(http.StatusOK, body)

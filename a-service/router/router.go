@@ -1,8 +1,6 @@
 package router
 
 import (
-	"net/http"
-
 	_ "github.com/Yusufzhafir/worlder-team-assignment/a-service/docs"
 	"github.com/Yusufzhafir/worlder-team-assignment/a-service/router/generator"
 	"github.com/labstack/echo/v4"
@@ -13,14 +11,6 @@ type Body[T any] struct {
 	Data    T      `json:"data"`
 	Error   bool   `json:"error"`
 	Message string `json:"message"`
-}
-
-func toggleDataSpeed(e echo.Context) error {
-	return e.JSON(http.StatusOK, Body[interface{}]{
-		Data:    nil,
-		Error:   false,
-		Message: "successfully toggled speed",
-	})
 }
 
 func bindGeneratorRoute(group *echo.Group, router generator.GeneratorRouter) {

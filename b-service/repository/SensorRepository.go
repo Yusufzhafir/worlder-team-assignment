@@ -42,6 +42,10 @@ type SensorRepository interface {
 	UpdateByTime(ctx context.Context, db *sqlx.DB, startTime, stopTime time.Time, sensorValue float64, sensorType string) (int64, error)
 	UpdateByIDs(ctx context.Context, db *sqlx.DB, ids []IDCombination, sensorValue float64, sensorType string) (int64, error)
 	UpdateByIDsAndTime(ctx context.Context, db *sqlx.DB, ids []IDCombination, startTime, stopTime time.Time, sensorValue float64, sensorType string) (int64, error)
+
+	//default pagination
+	SelectSensorDataPaginated(ctx context.Context, db *sqlx.DB, limit, offset int) ([]model.SensorReading, error)
+	SelectCountPagination(ctx context.Context, db *sqlx.DB) (int64, error)
 }
 
 type SensorRepositoryImpl struct {
@@ -120,6 +124,72 @@ func (sensorRepo *SensorRepositoryImpl) InsertReadingsBatchTx(ctx context.Contex
 		return affected, err
 	}
 	return affected, nil
+}
+
+type selectSensorPageArgs struct {
+	Limit  int `db:"limit"`
+	Offset int `db:"offset"`
+}
+
+const selectSensorsDataPaginated = `
+SELECT sensor_value, sensor_type, id1, id2, ts
+FROM sensor_readings
+ORDER BY ts
+LIMIT :limit OFFSET :offset
+`
+
+func (repo *SensorRepositoryImpl) SelectSensorDataPaginated(
+	ctx context.Context,
+	db *sqlx.DB,
+	limit, offset int,
+) ([]model.SensorReading, error) {
+	if limit <= 0 {
+		limit = 100
+	}
+	if offset < 0 {
+		offset = 0
+	}
+
+	args := selectSensorPageArgs{
+		Limit:  limit,
+		Offset: offset,
+	}
+
+	rows, err := db.NamedQuery(selectSensorsDataPaginated, args)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var readings []model.SensorReading
+	for rows.Next() {
+		var r model.SensorReading
+		if err := rows.StructScan(&r); err != nil {
+			return nil, err
+		}
+		readings = append(readings, r)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return readings, nil
+}
+
+const selectCountPaginated = `
+SELECT count(id1) AS cnt
+FROM sensor_readings
+`
+
+func (repo *SensorRepositoryImpl) SelectCountPagination(
+	ctx context.Context,
+	db *sqlx.DB,
+) (int64, error) {
+	var result CountResult
+	if err := db.GetContext(ctx, &result, selectCountPaginated); err != nil {
+		return 0, err
+	}
+
+	return result.Cnt, nil
 }
 
 const selectSensorsDataByTimePaginated = `
