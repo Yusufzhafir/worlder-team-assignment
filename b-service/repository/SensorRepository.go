@@ -14,6 +14,7 @@ type SensorRepository interface {
 	InsertReadingTx(ctx context.Context, db *sqlx.DB, r *model.SensorReadingInsert) (uint64, error)
 	InsertReadingsBatchTx(ctx context.Context, db *sqlx.DB, rs []model.SensorReadingInsert) (int64, error)
 	SelectByTime(ctx context.Context, db *sqlx.DB, startTime, stopTime time.Time, limit int, offset int) ([]model.SensorReading, error)
+	SelectCountByTime(ctx context.Context, db *sqlx.DB, startTime, stopTime time.Time) (int64, error)
 }
 
 type SensorRepositoryImpl struct {
@@ -148,4 +149,27 @@ func (repo *SensorRepositoryImpl) SelectByTime(
 		return nil, err
 	}
 	return readings, nil
+}
+
+const selectCountSensorsDataByTimePaginated = `
+SELECT count(id1) AS cnt
+FROM sensor_readings
+WHERE ts >= ? AND ts < ?
+`
+
+type CountResult struct {
+	Cnt int64 `db:"cnt"`
+}
+
+func (repo *SensorRepositoryImpl) SelectCountByTime(
+	ctx context.Context,
+	db *sqlx.DB,
+	startTime, stopTime time.Time,
+) (int64, error) {
+	var result CountResult
+	if err := db.GetContext(ctx, &result, selectCountSensorsDataByTimePaginated, startTime, stopTime); err != nil {
+		return 0, err
+	}
+
+	return result.Cnt, nil
 }

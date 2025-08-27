@@ -90,15 +90,14 @@ func (s *SensorRouterImpl) GetSensorDataByTime(ctx echo.Context) error {
 		return ctx.JSON(http.StatusBadRequest, httpmodels.Body[httpmodels.Empty]{Error: true, Message: "`from` must be earlier than `to`"})
 	}
 
-	// call your usecase (shape is up to you)
-	// e.g. rows, total, err := usecase.GetByTime(c.Request().Context(), from, to, size, offset)
-	rows, err := usecase.GetSensorByTime(ctx.Request().Context(), from, to, size, offset)
+	// call usecase
+	result, err := usecase.GetSensorByTime(ctx.Request().Context(), from, to, size, offset)
 	if err != nil {
 		return ctx.JSON(http.StatusInternalServerError, httpmodels.Body[httpmodels.Empty]{Error: true, Message: err.Error()})
 	}
-	newPayload := make([]payload.SensorPayload, len(rows))
-	for i := 0; i < len(rows); i++ {
-		currElement := rows[i]
+	newPayload := make([]payload.SensorPayload, len(result.Data))
+	for i := 0; i < len(result.Data); i++ {
+		currElement := result.Data[i]
 		newPayload[i] = payload.SensorPayload{
 			ID1:         currElement.ID1,
 			ID2:         currElement.ID2,
@@ -110,9 +109,9 @@ func (s *SensorRouterImpl) GetSensorDataByTime(ctx echo.Context) error {
 	body := httpmodels.Body[payload.SensorPage]{
 		Data: payload.SensorPage{
 			Items:    newPayload,
-			Page:     10,
-			PageSize: 10,
-			Total:    10,
+			Page:     page,
+			PageSize: size,
+			Total:    result.Count,
 		},
 	}
 	return ctx.JSON(http.StatusOK, body)

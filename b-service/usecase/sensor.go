@@ -13,7 +13,7 @@ import (
 
 type SensorUseCase interface {
 	InsertSensor(ctx context.Context, data *pb.SensorReading) error
-	GetSensorByTime(ctx context.Context, from time.Time, to time.Time, limit int, offset int) ([]model.SensorReading, error)
+	GetSensorByTime(ctx context.Context, from time.Time, to time.Time, limit int, offset int) (getSensorByType, error)
 }
 
 type SensorUseCaseImpl struct {
@@ -47,18 +47,30 @@ func (sensorUseCase *SensorUseCaseImpl) InsertSensor(ctx context.Context, data *
 	return nil
 }
 
-func (sensorUseCase *SensorUseCaseImpl) GetSensorByTime(ctx context.Context, from time.Time, to time.Time, limit int, offset int) ([]model.SensorReading, error) {
+type getSensorByType struct {
+	Data  []model.SensorReading
+	Count int64
+}
+
+func (sensorUseCase *SensorUseCaseImpl) GetSensorByTime(ctx context.Context, from time.Time, to time.Time, limit int, offset int) (getSensorByType, error) {
 	repo := *sensorUseCase.repo
+	result := getSensorByType{}
 
 	if repo == nil {
-		return []model.SensorReading{}, fmt.Errorf("repository object is nil %v", repo)
+		return result, fmt.Errorf("repository object is nil %v", repo)
 	}
 
-	result, err := repo.SelectByTime(ctx, sensorUseCase.db, from, to, limit, offset)
-
+	rows, err := repo.SelectByTime(ctx, sensorUseCase.db, from, to, limit, offset)
 	if err != nil {
-		return []model.SensorReading{}, err
+		return result, err
 	}
+	count, err := repo.SelectCountByTime(ctx, sensorUseCase.db, from, to)
+	if err != nil {
+		return result, err
+	}
+
+	result.Count = count
+	result.Data = rows
 
 	return result, nil
 }
