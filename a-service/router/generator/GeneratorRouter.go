@@ -64,13 +64,10 @@ func (g *generatorRouterImpl) Config(ctx echo.Context) error {
 // @Success 200 {object} model.Envelope{data=map[string]interface{}} "Statistics retrieved successfully"
 // @Router /stats [get]
 func (g *generatorRouterImpl) GetStats(ctx echo.Context) error {
-	result1, result2 := (*g.usecase).GetStats()
-	log.Default().Printf("output of stats %v %v", result1, result2)
+	result := (*g.usecase).GetDetailedStats()
+	log.Default().Printf("output of stats %v", result)
 	return ctx.JSON(http.StatusOK, httpModels.Body[interface{}]{
-		Data: map[string]interface{}{
-			"total_sent":   result1,
-			"total_failed": result2,
-		},
+		Data:    result,
 		Error:   false,
 		Message: "successfully configured message",
 	})

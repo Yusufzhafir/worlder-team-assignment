@@ -22,6 +22,7 @@ type DataGenerator interface {
 	GetStats() (uint64, uint64)
 	SpamRequests(req SpamRequest) map[string]interface{}
 	Config(config GeneratorConfig)
+	GetDetailedStats() map[string]interface{}
 }
 type DataGeneratorImpl struct {
 	mu        sync.RWMutex
@@ -30,7 +31,7 @@ type DataGeneratorImpl struct {
 	frequency time.Duration // interval between requests
 	client    pb.IngestServiceClient
 	conn      *grpc.ClientConn
-
+	startTime time.Time
 	// Configuration
 	serverAddr     string
 	sensorValue    float64
@@ -62,7 +63,7 @@ func NewDataGenerator(serverAddr string) DataGenerator {
 		sensorType:     "TEMP",
 		id1:            "ABCDEFGH",
 		id2:            1,
-		requestTimeout: 2 * time.Second,
+		requestTimeout: 1 * time.Second,
 	}
 }
 
@@ -128,6 +129,7 @@ func (dg *DataGeneratorImpl) Start() bool {
 
 	dg.isRunning = true
 	dg.stopChan = make(chan struct{})
+	dg.startTime = time.Now()
 
 	go dg.generateContinuously()
 	return true
@@ -160,6 +162,37 @@ func (dg *DataGeneratorImpl) IsRunning() bool {
 
 func (dg *DataGeneratorImpl) GetStats() (uint64, uint64) {
 	return atomic.LoadUint64(&dg.totalSent), atomic.LoadUint64(&dg.totalFailed)
+}
+
+func (dg *DataGeneratorImpl) GetDetailedStats() map[string]interface{} {
+	totalSent := atomic.LoadUint64(&dg.totalSent)
+	totalFailed := atomic.LoadUint64(&dg.totalFailed)
+	totalRequests := totalSent + totalFailed
+
+	dg.mu.RLock()
+	isRunning := dg.isRunning
+	startTime := dg.startTime
+	frequency := dg.frequency
+	dg.mu.RUnlock()
+
+	var uptimeSeconds float64
+	var overallRPS float64
+
+	if isRunning && !startTime.IsZero() {
+		uptimeSeconds = time.Since(startTime).Seconds()
+		if uptimeSeconds > 0 {
+			overallRPS = float64(totalRequests) / uptimeSeconds
+		}
+	}
+	return map[string]interface{}{
+		"Total_Sent":        totalSent,
+		"Total_Failed":      totalFailed,
+		"Total_Requests":    totalRequests,
+		"Uptime_Seconds":    uptimeSeconds,
+		"Overall_RPS":       overallRPS,
+		"Is_Running":        isRunning,
+		"Configured_FreqMs": frequency.Milliseconds(),
+	}
 }
 
 func (dg *DataGeneratorImpl) generateContinuously() {
