@@ -5,7 +5,9 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"os"
 
+	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 
@@ -57,9 +59,21 @@ import (
 // @authorizationUrl						https://example.com/oauth/authorize
 // @scope.admin							Grants read and write access to administrative information
 func main() {
+	err := godotenv.Load()
+	logger := log.Default()
+
+	if err != nil {
+		logger.Fatal("Error loading .env file")
+	}
 	// Initialize data generator
-	dg := usecase.NewDataGenerator("localhost:50051")
-	err := dg.Connect()
+	var connString string
+	if val := os.Getenv("SERVER_ADDR"); val != "" {
+		connString = val
+	} else {
+		connString = "localhost:50051"
+	}
+	dg := usecase.NewDataGenerator(connString)
+	err = dg.Connect()
 	if err != nil {
 		log.Fatalf("Failed to connect to gRPC server: %v", err)
 	}

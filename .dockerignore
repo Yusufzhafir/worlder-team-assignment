@@ -1,0 +1,25 @@
+# VCS
+.git
+.gitignore
+.github
+
+# IDE
+.vscode
+.idea
+*.swp
+
+# Go build output
+bin/
+out/
+dist/
+**/*.test
+**/coverage.*
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Node / web (if present)
+node_modules/
+build/
+.next/

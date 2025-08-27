@@ -102,7 +102,13 @@ func main() {
 		logger.Fatalf("failed to listen: %v", err)
 	}
 
-	db, err := sqlx.Connect("mysql", fmt.Sprintf("%s:%s@tcp(localhost:3306)/%s?parseTime=true&loc=Local", dbUser, dbPassword, dbName))
+	var connString string
+	if val := os.Getenv("DB_DSN"); val != "" {
+		connString = val
+	} else {
+		connString = fmt.Sprintf("%s:%s@tcp(localhost:3306)/%s?parseTime=true&loc=Local", dbUser, dbPassword, dbName)
+	}
+	db, err := sqlx.Connect("mysql", connString)
 
 	if err != nil {
 		logger.Fatalf("Failed to connect DB %v", err)
