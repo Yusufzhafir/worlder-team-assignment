@@ -1,0 +1,1162 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "contact": {}
+    },
+    "paths": {
+        "/sensor": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sensor"
+                ],
+                "summary": "List sensor readings (paginated)",
+                "parameters": [
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 500,
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 50,
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "data: SensorPage",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.SensorPage"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "error=true, message explains",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.Empty"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.Empty"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/sensor/delete/ids": {
+            "delete": {
+                "description": "Delete sensor readings that match the specified ID combinations",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sensor"
+                ],
+                "summary": "Delete sensor readings by ID combinations",
+                "parameters": [
+                    {
+                        "description": "ID combinations to delete",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.DeleteByIDsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "data: DeleteResponse",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.DeleteResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "error=true, message explains",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.Empty"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.Empty"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/sensor/delete/ids-time": {
+            "delete": {
+                "description": "Delete sensor readings that fall within the specified time range",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sensor"
+                ],
+                "summary": "Delete sensor readings by time range",
+                "parameters": [
+                    {
+                        "description": "Time range to delete",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.DeleteByIDAndTimesRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "data: DeleteResponse",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.DeleteResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "error=true, message explains",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.Empty"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.Empty"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/sensor/delete/time": {
+            "delete": {
+                "description": "Delete sensor readings that fall within the specified time range",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sensor"
+                ],
+                "summary": "Delete sensor readings by time range",
+                "parameters": [
+                    {
+                        "description": "Time range to delete",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.DeleteByTimeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "data: DeleteResponse",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.DeleteResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "error=true, message explains",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.Empty"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.Empty"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/sensor/ids": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sensor"
+                ],
+                "summary": "List sensor readings filtered by ID combinations (paginated)",
+                "parameters": [
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 500,
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 50,
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "0,1,2",
+                        "description": "Comma-separated ID1 values",
+                        "name": "id1",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "A,B,C",
+                        "description": "Comma-separated ID2 values",
+                        "name": "id2",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "data: SensorPage",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.SensorPage"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "error=true, message explains",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.Empty"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.Empty"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/sensor/ids-time": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sensor"
+                ],
+                "summary": "List sensor readings filtered by ID combinations and time range (paginated)",
+                "parameters": [
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 500,
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 50,
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "0,1,2",
+                        "description": "Comma-separated ID1 values",
+                        "name": "id1",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "A,B,C",
+                        "description": "Comma-separated ID2 values",
+                        "name": "id2",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "2025-08-25T18:00:24.947000+07:00",
+                        "description": "Start time (RFC3339Nano)",
+                        "name": "from",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "example": "2025-08-25T19:00:24.947000+07:00",
+                        "description": "End time (RFC3339Nano)",
+                        "name": "to",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "data: SensorPage",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.SensorPage"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "error=true, message explains",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.Empty"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.Empty"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/sensor/time": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sensor"
+                ],
+                "summary": "List sensor readings filter by time(paginated)",
+                "parameters": [
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 500,
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 50,
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "2006-01-02T15:04:05.999999999+07:00",
+                        "description": "from time",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "2006-01-02T16:04:05.999999999+07:00",
+                        "description": "to time",
+                        "name": "to",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "data: SensorPage",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.SensorPage"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "error=true, message explains",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.Empty"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.Empty"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/sensor/update/ids": {
+            "put": {
+                "description": "Update sensor readings that match the specified ID combinations",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sensor"
+                ],
+                "summary": "Update sensor readings by ID combinations",
+                "parameters": [
+                    {
+                        "description": "ID combinations and new values",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.UpdateByIDsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "data: UpdateResponse",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.UpdateResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "error=true, message explains",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.Empty"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.Empty"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/sensor/update/ids-time": {
+            "put": {
+                "description": "Update sensor readings that match both the ID combinations and time range",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sensor"
+                ],
+                "summary": "Update sensor readings by ID combinations and time range",
+                "parameters": [
+                    {
+                        "description": "ID combinations, time range, and new values",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.UpdateByIDsAndTimeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "data: UpdateResponse",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.UpdateResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "error=true, message explains",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.Empty"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.Empty"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/sensor/update/time": {
+            "put": {
+                "description": "Update sensor readings that fall within the specified time range",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sensor"
+                ],
+                "summary": "Update sensor readings by time range",
+                "parameters": [
+                    {
+                        "description": "Time range and new values",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.UpdateByTimeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "data: UpdateResponse",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.UpdateResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "error=true, message explains",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.Empty"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.Empty"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "model.DeleteByIDAndTimesRequest": {
+            "type": "object",
+            "required": [
+                "from_time",
+                "id_combinations",
+                "to_time"
+            ],
+            "properties": {
+                "from_time": {
+                    "type": "string",
+                    "example": "2025-08-25T18:00:24.947000+07:00"
+                },
+                "id_combinations": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/model.IDCombination"
+                    }
+                },
+                "to_time": {
+                    "type": "string",
+                    "example": "2025-08-25T19:00:24.947000+07:00"
+                }
+            }
+        },
+        "model.DeleteByIDsRequest": {
+            "type": "object",
+            "required": [
+                "id_combinations"
+            ],
+            "properties": {
+                "id_combinations": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/model.IDCombination"
+                    }
+                }
+            }
+        },
+        "model.DeleteByTimeRequest": {
+            "type": "object",
+            "required": [
+                "from_time",
+                "to_time"
+            ],
+            "properties": {
+                "from_time": {
+                    "type": "string",
+                    "example": "2025-08-25T18:00:24.947000+07:00"
+                },
+                "to_time": {
+                    "type": "string",
+                    "example": "2025-08-25T19:00:24.947000+07:00"
+                }
+            }
+        },
+        "model.DeleteResponse": {
+            "type": "object",
+            "properties": {
+                "deleted_count": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.Empty": {
+            "type": "object"
+        },
+        "model.Envelope": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "error": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "message": {
+                    "type": "string",
+                    "example": "ok"
+                }
+            }
+        },
+        "model.IDCombination": {
+            "type": "object",
+            "required": [
+                "id1",
+                "id2"
+            ],
+            "properties": {
+                "id1": {
+                    "type": "string"
+                },
+                "id2": {
+                    "type": "integer"
+                }
+            }
+        },
+        "model.SensorPage": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.SensorPayload"
+                    }
+                },
+                "page": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "pageSize": {
+                    "type": "integer",
+                    "example": 50
+                },
+                "total": {
+                    "type": "integer",
+                    "example": 1234
+                }
+            }
+        },
+        "model.SensorPayload": {
+            "type": "object",
+            "properties": {
+                "id1": {
+                    "type": "string",
+                    "example": "abc-123"
+                },
+                "id2": {
+                    "type": "integer",
+                    "example": 123
+                },
+                "sensorType": {
+                    "type": "string",
+                    "example": "temperature"
+                },
+                "timestampMs": {
+                    "type": "integer",
+                    "example": 1724550000000
+                },
+                "value": {
+                    "type": "number",
+                    "example": 23.5
+                }
+            }
+        },
+        "model.UpdateByIDsAndTimeRequest": {
+            "type": "object",
+            "required": [
+                "from_time",
+                "id_combinations",
+                "sensor_type",
+                "sensor_value",
+                "to_time"
+            ],
+            "properties": {
+                "from_time": {
+                    "type": "string",
+                    "example": "2023-01-01T00:00:00Z"
+                },
+                "id_combinations": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/model.IDCombination"
+                    }
+                },
+                "sensor_type": {
+                    "type": "string",
+                    "example": "temperature"
+                },
+                "sensor_value": {
+                    "type": "number",
+                    "example": 25.5
+                },
+                "to_time": {
+                    "type": "string",
+                    "example": "2023-12-31T23:59:59Z"
+                }
+            }
+        },
+        "model.UpdateByIDsRequest": {
+            "type": "object",
+            "required": [
+                "id_combinations",
+                "sensor_type",
+                "sensor_value"
+            ],
+            "properties": {
+                "id_combinations": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/model.IDCombination"
+                    }
+                },
+                "sensor_type": {
+                    "type": "string",
+                    "example": "temperature"
+                },
+                "sensor_value": {
+                    "type": "number",
+                    "example": 25.5
+                }
+            }
+        },
+        "model.UpdateByTimeRequest": {
+            "type": "object",
+            "required": [
+                "from_time",
+                "sensor_type",
+                "sensor_value",
+                "to_time"
+            ],
+            "properties": {
+                "from_time": {
+                    "type": "string",
+                    "example": "2023-01-01T00:00:00Z"
+                },
+                "sensor_type": {
+                    "type": "string",
+                    "example": "temperature"
+                },
+                "sensor_value": {
+                    "type": "number",
+                    "example": 25.5
+                },
+                "to_time": {
+                    "type": "string",
+                    "example": "2023-12-31T23:59:59Z"
+                }
+            }
+        },
+        "model.UpdateResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "updated_count": {
+                    "type": "integer"
+                }
+            }
+        }
+    }
+}

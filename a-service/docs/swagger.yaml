@@ -1,0 +1,696 @@
+definitions:
+  model.DeleteByIDAndTimesRequest:
+    properties:
+      from_time:
+        example: "2025-08-25T18:00:24.947000+07:00"
+        type: string
+      id_combinations:
+        items:
+          $ref: '#/definitions/model.IDCombination'
+        minItems: 1
+        type: array
+      to_time:
+        example: "2025-08-25T19:00:24.947000+07:00"
+        type: string
+    required:
+    - from_time
+    - id_combinations
+    - to_time
+    type: object
+  model.DeleteByIDsRequest:
+    properties:
+      id_combinations:
+        items:
+          $ref: '#/definitions/model.IDCombination'
+        minItems: 1
+        type: array
+    required:
+    - id_combinations
+    type: object
+  model.DeleteByTimeRequest:
+    properties:
+      from_time:
+        example: "2025-08-25T18:00:24.947000+07:00"
+        type: string
+      to_time:
+        example: "2025-08-25T19:00:24.947000+07:00"
+        type: string
+    required:
+    - from_time
+    - to_time
+    type: object
+  model.DeleteResponse:
+    properties:
+      deleted_count:
+        type: integer
+      message:
+        type: string
+    type: object
+  model.Empty:
+    type: object
+  model.Envelope:
+    properties:
+      data: {}
+      error:
+        example: false
+        type: boolean
+      message:
+        example: ok
+        type: string
+    type: object
+  model.IDCombination:
+    properties:
+      id1:
+        type: string
+      id2:
+        type: integer
+    required:
+    - id1
+    - id2
+    type: object
+  model.SensorPage:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/model.SensorPayload'
+        type: array
+      page:
+        example: 1
+        type: integer
+      pageSize:
+        example: 50
+        type: integer
+      total:
+        example: 1234
+        type: integer
+    type: object
+  model.SensorPayload:
+    properties:
+      id1:
+        example: abc-123
+        type: string
+      id2:
+        example: 123
+        type: integer
+      sensorType:
+        example: temperature
+        type: string
+      timestampMs:
+        example: 1724550000000
+        type: integer
+      value:
+        example: 23.5
+        type: number
+    type: object
+  model.UpdateByIDsAndTimeRequest:
+    properties:
+      from_time:
+        example: "2023-01-01T00:00:00Z"
+        type: string
+      id_combinations:
+        items:
+          $ref: '#/definitions/model.IDCombination'
+        minItems: 1
+        type: array
+      sensor_type:
+        example: temperature
+        type: string
+      sensor_value:
+        example: 25.5
+        type: number
+      to_time:
+        example: "2023-12-31T23:59:59Z"
+        type: string
+    required:
+    - from_time
+    - id_combinations
+    - sensor_type
+    - sensor_value
+    - to_time
+    type: object
+  model.UpdateByIDsRequest:
+    properties:
+      id_combinations:
+        items:
+          $ref: '#/definitions/model.IDCombination'
+        minItems: 1
+        type: array
+      sensor_type:
+        example: temperature
+        type: string
+      sensor_value:
+        example: 25.5
+        type: number
+    required:
+    - id_combinations
+    - sensor_type
+    - sensor_value
+    type: object
+  model.UpdateByTimeRequest:
+    properties:
+      from_time:
+        example: "2023-01-01T00:00:00Z"
+        type: string
+      sensor_type:
+        example: temperature
+        type: string
+      sensor_value:
+        example: 25.5
+        type: number
+      to_time:
+        example: "2023-12-31T23:59:59Z"
+        type: string
+    required:
+    - from_time
+    - sensor_type
+    - sensor_value
+    - to_time
+    type: object
+  model.UpdateResponse:
+    properties:
+      message:
+        type: string
+      updated_count:
+        type: integer
+    type: object
+info:
+  contact: {}
+paths:
+  /sensor:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        minimum: 1
+        name: page
+        type: integer
+      - default: 50
+        description: Page size
+        in: query
+        maximum: 500
+        minimum: 1
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'data: SensorPage'
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.SensorPage'
+              type: object
+        "400":
+          description: error=true, message explains
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.Empty'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.Empty'
+              type: object
+      summary: List sensor readings (paginated)
+      tags:
+      - sensor
+  /sensor/delete/ids:
+    delete:
+      consumes:
+      - application/json
+      description: Delete sensor readings that match the specified ID combinations
+      parameters:
+      - description: ID combinations to delete
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.DeleteByIDsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'data: DeleteResponse'
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.DeleteResponse'
+              type: object
+        "400":
+          description: error=true, message explains
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.Empty'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.Empty'
+              type: object
+      summary: Delete sensor readings by ID combinations
+      tags:
+      - sensor
+  /sensor/delete/ids-time:
+    delete:
+      consumes:
+      - application/json
+      description: Delete sensor readings that fall within the specified time range
+      parameters:
+      - description: Time range to delete
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.DeleteByIDAndTimesRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'data: DeleteResponse'
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.DeleteResponse'
+              type: object
+        "400":
+          description: error=true, message explains
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.Empty'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.Empty'
+              type: object
+      summary: Delete sensor readings by time range
+      tags:
+      - sensor
+  /sensor/delete/time:
+    delete:
+      consumes:
+      - application/json
+      description: Delete sensor readings that fall within the specified time range
+      parameters:
+      - description: Time range to delete
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.DeleteByTimeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'data: DeleteResponse'
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.DeleteResponse'
+              type: object
+        "400":
+          description: error=true, message explains
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.Empty'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.Empty'
+              type: object
+      summary: Delete sensor readings by time range
+      tags:
+      - sensor
+  /sensor/ids:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        minimum: 1
+        name: page
+        type: integer
+      - default: 50
+        description: Page size
+        in: query
+        maximum: 500
+        minimum: 1
+        name: page_size
+        type: integer
+      - description: Comma-separated ID1 values
+        example: 0,1,2
+        in: query
+        name: id1
+        type: string
+      - description: Comma-separated ID2 values
+        example: A,B,C
+        in: query
+        name: id2
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'data: SensorPage'
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.SensorPage'
+              type: object
+        "400":
+          description: error=true, message explains
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.Empty'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.Empty'
+              type: object
+      summary: List sensor readings filtered by ID combinations (paginated)
+      tags:
+      - sensor
+  /sensor/ids-time:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        minimum: 1
+        name: page
+        type: integer
+      - default: 50
+        description: Page size
+        in: query
+        maximum: 500
+        minimum: 1
+        name: page_size
+        type: integer
+      - description: Comma-separated ID1 values
+        example: 0,1,2
+        in: query
+        name: id1
+        type: string
+      - description: Comma-separated ID2 values
+        example: A,B,C
+        in: query
+        name: id2
+        type: string
+      - description: Start time (RFC3339Nano)
+        example: "2025-08-25T18:00:24.947000+07:00"
+        in: query
+        name: from
+        required: true
+        type: string
+      - description: End time (RFC3339Nano)
+        example: "2025-08-25T19:00:24.947000+07:00"
+        in: query
+        name: to
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'data: SensorPage'
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.SensorPage'
+              type: object
+        "400":
+          description: error=true, message explains
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.Empty'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.Empty'
+              type: object
+      summary: List sensor readings filtered by ID combinations and time range (paginated)
+      tags:
+      - sensor
+  /sensor/time:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        minimum: 1
+        name: page
+        type: integer
+      - default: 50
+        description: Page size
+        in: query
+        maximum: 500
+        minimum: 1
+        name: page_size
+        type: integer
+      - default: "2006-01-02T15:04:05.999999999+07:00"
+        description: from time
+        in: query
+        name: from
+        type: string
+      - default: "2006-01-02T16:04:05.999999999+07:00"
+        description: to time
+        in: query
+        name: to
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'data: SensorPage'
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.SensorPage'
+              type: object
+        "400":
+          description: error=true, message explains
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.Empty'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.Empty'
+              type: object
+      summary: List sensor readings filter by time(paginated)
+      tags:
+      - sensor
+  /sensor/update/ids:
+    put:
+      consumes:
+      - application/json
+      description: Update sensor readings that match the specified ID combinations
+      parameters:
+      - description: ID combinations and new values
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.UpdateByIDsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'data: UpdateResponse'
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.UpdateResponse'
+              type: object
+        "400":
+          description: error=true, message explains
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.Empty'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.Empty'
+              type: object
+      summary: Update sensor readings by ID combinations
+      tags:
+      - sensor
+  /sensor/update/ids-time:
+    put:
+      consumes:
+      - application/json
+      description: Update sensor readings that match both the ID combinations and
+        time range
+      parameters:
+      - description: ID combinations, time range, and new values
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.UpdateByIDsAndTimeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'data: UpdateResponse'
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.UpdateResponse'
+              type: object
+        "400":
+          description: error=true, message explains
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.Empty'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.Empty'
+              type: object
+      summary: Update sensor readings by ID combinations and time range
+      tags:
+      - sensor
+  /sensor/update/time:
+    put:
+      consumes:
+      - application/json
+      description: Update sensor readings that fall within the specified time range
+      parameters:
+      - description: Time range and new values
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.UpdateByTimeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'data: UpdateResponse'
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.UpdateResponse'
+              type: object
+        "400":
+          description: error=true, message explains
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.Empty'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.Empty'
+              type: object
+      summary: Update sensor readings by time range
+      tags:
+      - sensor
+swagger: "2.0"
