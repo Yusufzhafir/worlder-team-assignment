@@ -13,7 +13,7 @@ func bindSensor(e *echo.Group, sensorRouter *sensorRouter.SensorRouter) error {
 		return fmt.Errorf("router is empty %v", router)
 	}
 	e.GET("/sensor", router.GetSensorDataPaginated)                    //with no q-param
-	e.GET("/sensor/id", router.GetSensorDataById)                      //with no q-param id
+	e.GET("/sensor/ids", router.GetSensorDataById)                     //with no q-param id
 	e.GET("/sensor/time", router.GetSensorDataByTime)                  //with no q-param time
 	e.GET("/sensor/id-time", router.GetSensorDataByIdAndTime)          //with no q-param id and time
 	e.DELETE("/sensor/delete/id", router.DeleteSensorById)             //with no q-param id

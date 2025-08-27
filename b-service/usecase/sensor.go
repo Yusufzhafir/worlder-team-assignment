@@ -13,7 +13,8 @@ import (
 
 type SensorUseCase interface {
 	InsertSensor(ctx context.Context, data *pb.SensorReading) error
-	GetSensorByTime(ctx context.Context, from time.Time, to time.Time, limit int, offset int) (getSensorByType, error)
+	GetSensorByTime(ctx context.Context, from time.Time, to time.Time, limit int, offset int) (paginatedSensor, error)
+	GetSensorByID(ctx context.Context, idCombinationPtr *[]repository.IDCombination, limit int, offset int) (paginatedSensor, error)
 }
 
 type SensorUseCaseImpl struct {
@@ -47,14 +48,14 @@ func (sensorUseCase *SensorUseCaseImpl) InsertSensor(ctx context.Context, data *
 	return nil
 }
 
-type getSensorByType struct {
+type paginatedSensor struct {
 	Data  []model.SensorReading
 	Count int64
 }
 
-func (sensorUseCase *SensorUseCaseImpl) GetSensorByTime(ctx context.Context, from time.Time, to time.Time, limit int, offset int) (getSensorByType, error) {
+func (sensorUseCase *SensorUseCaseImpl) GetSensorByTime(ctx context.Context, from time.Time, to time.Time, limit int, offset int) (paginatedSensor, error) {
 	repo := *sensorUseCase.repo
-	result := getSensorByType{}
+	result := paginatedSensor{}
 
 	if repo == nil {
 		return result, fmt.Errorf("repository object is nil %v", repo)
@@ -65,6 +66,29 @@ func (sensorUseCase *SensorUseCaseImpl) GetSensorByTime(ctx context.Context, fro
 		return result, err
 	}
 	count, err := repo.SelectCountByTime(ctx, sensorUseCase.db, from, to)
+	if err != nil {
+		return result, err
+	}
+
+	result.Count = count
+	result.Data = rows
+
+	return result, nil
+}
+
+func (sensorUseCase *SensorUseCaseImpl) GetSensorByID(ctx context.Context, idCombinationPtr *[]repository.IDCombination, limit int, offset int) (paginatedSensor, error) {
+	repo := *sensorUseCase.repo
+	result := paginatedSensor{}
+	idCombination := *idCombinationPtr
+	if repo == nil {
+		return result, fmt.Errorf("repository object is nil %v", repo)
+	}
+
+	rows, err := repo.SelectByIDs(ctx, sensorUseCase.db, idCombination, limit, offset)
+	if err != nil {
+		return result, err
+	}
+	count, err := repo.SelectCountByIDs(ctx, sensorUseCase.db, idCombination)
 	if err != nil {
 		return result, err
 	}
