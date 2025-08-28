@@ -12,19 +12,13 @@ The primary objective is to design **Service B** to be as efficient as possible 
 
 ## Architecture Overview
 
-```
-┌─────────────┐    gRPC     ┌─────────────┐    SQL     ┌─────────────┐
-│  Service A  │ ────────── │  Service B  │ ────────── │   MySQL     │
-│  (Client)   │            │  (Server)   │            │  Database   │
-└─────────────┘            └─────────────┘            └─────────────┘
-                                  │
-                                  │ REST API
-                                  │
-                           ┌─────────────┐
-                           │  API Users  │
-                           │ (Management)│
-                           └─────────────┘
-```
+![alt text](image.png)
+### Architecture of A
+![alt text](image-1.png)
+### Architecture of B
+![alt text](image-2.png)
+### Database Schema
+![alt text](image-3.png)
 
 ## Service B (Server) - Architecture
 
@@ -243,4 +237,88 @@ The system includes comprehensive testing tools for:
 
 ---
 
-*This project demonstrates high-performance microservice design patterns with a focus on efficient data ingestion and processing.*
+## Getting Started
+before starting out you might want to run the basics
+```bash
+go mod vendor
+go mod tidy
+```
+and then you can try running each instance by is selfs
+### db
+```bash
+docker compose build --no-cache db-service
+docker compose up -d db-service
+```
+### service b
+```bash
+go run b-service/main.go
+```
+you cen check the result in https://localhost:8080/swagger/swagger-ui/index.html
+### service a
+```bash
+go run a-service/main.go
+```
+https://localhost:9000/swagger/swagger-ui/index.html
+
+all API documentation will be available on swagger
+
+
+## Running simmulation
+if you want to run the simulation you can start by running. the script will create the backend and DB instance, then 1 client instance. the script will add additional instances;
+```bash
+docker compose up -d
+chmod +x ./docker-scale-sript.sh
+./docker-scale-sript.sh
+```
+
+finnaly after that i have built a CLI tool that will help you control all the clients behavior
+
+```bash
+chmod +x ./service-cli
+./service-cli
+
+--- output ---
+./service-cli help
+CLI tool for managing API endpoints across multiple ports
+
+Usage:
+  a-plane [command]
+
+Available Commands:
+  completion  Generate the autocompletion script for the specified shell
+  frequency   Set frequency for all endpoints
+  help        Help about any command
+  start       Start all endpoints
+  stats       Get aggregated stats from all endpoints
+  stop        Stop all endpoints
+
+Flags:
+  -h, --help   help for a-plane
+
+Use "a-plane [command] --help" for more information about a command.
+```
+
+with that in mind it, handling the clients shold be more managable.
+
+
+The current result running in Macbook pro m3 chip
+
+```bash
+Running Status:
+  Running: 10.000000/10.000000 endpoints
+
+Overall RPS:
+  Min: 1152.75, Max: 1197.89, Avg: 1157.32, Total: 11573.16
+
+Total Failed:
+  Min: 0.000000, Max: 0.000000, Avg: 0.000000, Total: 0.000000
+
+Total Requests:
+  Min: 22596.000000, Max: 23481.000000, Avg: 22684.500000, Total: 226845.000000
+
+Total Sent:
+  Min: 22596.000000, Max: 23481.000000, Avg: 22684.500000, Total: 226845.000000
+
+Uptime (seconds):
+  Min: 19.599930, Max: 19.601922, Avg: 19.600954, Total: 196.009538
+```

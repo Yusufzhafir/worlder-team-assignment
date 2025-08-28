@@ -39,7 +39,7 @@ type AggregatedStats struct {
 }
 
 var rootCmd = &cobra.Command{
-	Use:   "a-plane",
+	Use:   "service-cli",
 	Short: "CLI tool for managing API endpoints across multiple ports",
 }
 
